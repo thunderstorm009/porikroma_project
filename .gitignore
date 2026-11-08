@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Build output and compiler caches
+dist/
+build/
+Frontend/*.tsbuildinfo
+Frontend/tsconfig.*.tsbuildinfo
+
+# Logs and local tooling
+*.log
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+
+# Local database dumps
+*.dump
+*.sql.bak
+
+# The repository root has no package manifest; ignore its accidental lock.
+/package-lock.json
