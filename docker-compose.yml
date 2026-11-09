@@ -1,0 +1,60 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: porikroma-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: porikroma
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./Backend/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d porikroma"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    container_name: porikroma-backend
+    restart: unless-stopped
+    command: >
+      sh -c "python seed.py && uvicorn app.main:app --host 0.0.0.0 --port 4000 --reload"
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/porikroma
+      - PORT=4000
+      - JWT_SECRET=porikroma-local-development-secret-key-12345
+      - CORS_ORIGINS=*
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./Backend:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile
+    container_name: porikroma-frontend
+    restart: unless-stopped
+    environment:
+      - VITE_API_URL=http://localhost:4000
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./Frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    command: npm run dev -- --host
+
+volumes:
+  pgdata:
