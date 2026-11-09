@@ -1,6 +1,6 @@
 # Porikroma FastAPI Migration: Route Map & Implementation Breakdown
 
-This document provides a comprehensive mapping of all endpoints from the legacy Fastify backend (`Backend/src/server.ts`) to the modular FastAPI backend (`Backend-FastAPI`).
+This document provides a comprehensive mapping of all endpoints from the legacy Fastify backend to the modular FastAPI backend (`Backend`).
 
 Each endpoint specifies its HTTP method, exact path, authentication & authorization requirement, and the target implementation part (Parts 1 through 13).
 

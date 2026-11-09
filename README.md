@@ -7,7 +7,7 @@ and building traveler reputation.
 The repository contains:
 
 - `Frontend/` — React 19 + TypeScript + Vite application.
-- `Backend-FastAPI/` — Python 3.14 + FastAPI API with PostgreSQL persistence.
+- `Backend/` — Python 3.14 + FastAPI API with PostgreSQL persistence.
 
 ## Requirements
 
@@ -24,16 +24,16 @@ Create the database and copy the backend environment file:
 
 ```bash
 createdb porikroma
-cp Backend-FastAPI/.env.example Backend-FastAPI/.env
+cp Backend/.env.example Backend/.env
 ```
 
-Update `Backend-FastAPI/.env` if your PostgreSQL username or connection settings
+Update `Backend/.env` if your PostgreSQL username or connection settings
 differ. Never commit `.env`.
 
 ### 2. Start the backend
 
 ```bash
-cd Backend-FastAPI
+cd Backend
 pip install -r requirements.txt
 uvicorn app.main:app --port 4000 --host 0.0.0.0
 ```
@@ -72,7 +72,7 @@ cd ../Frontend && npm run build
 The API includes authentication, destinations, trips, groups, applications,
 expenses, traveler reviews, profiles, privacy, notifications, community,
 traveler passport, tours, bookings, moderation, trip workspaces, and AI
-conversation persistence. See [Backend-FastAPI/ROUTE_MAP.md](./Backend-FastAPI/ROUTE_MAP.md) for the
+conversation persistence. See [Backend/ROUTE_MAP.md](./Backend/ROUTE_MAP.md) for the
 endpoint list.
 
 Authenticated requests use:
@@ -84,7 +84,7 @@ Authorization: Bearer <jwt>
 ## Database
 
 The PostgreSQL schema is maintained in
-[Backend-FastAPI/schema.sql](./Backend-FastAPI/schema.sql). It is additive and uses
+[Backend/schema.sql](./Backend/schema.sql). It is additive and uses
 `CREATE TABLE IF NOT EXISTS` / `CREATE INDEX IF NOT EXISTS` so existing local
 records are preserved.
 
