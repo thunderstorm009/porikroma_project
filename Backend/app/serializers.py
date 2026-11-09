@@ -57,9 +57,9 @@ def serialize_value(val: Any) -> Any:
     if isinstance(val, list):
         return [serialize_value(item) for item in val]
     if isinstance(val, dict):
-        return {k: serialize_value(v) for k, v in val.items()}
+        return {k: (json.loads(v) if k == "answers" and isinstance(v, str) else serialize_value(v)) for k, v in val.items()}
     if hasattr(val, "keys") and callable(val.keys):
-        return {k: serialize_value(val[k]) for k in val.keys()}
+        return {k: (json.loads(val[k]) if k == "answers" and isinstance(val[k], str) else serialize_value(val[k])) for k in val.keys()}
     return val
 
 

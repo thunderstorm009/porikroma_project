@@ -113,9 +113,11 @@ CREATE TABLE IF NOT EXISTS notifications (
   user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   type text NOT NULL,
   detail text NOT NULL,
+  link text NOT NULL DEFAULT '',
   read boolean NOT NULL DEFAULT false,
   created_at timestamptz NOT NULL DEFAULT now()
 );
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS link text NOT NULL DEFAULT '';
 
 CREATE TABLE IF NOT EXISTS user_follows (
   follower_id uuid REFERENCES users(id) ON DELETE CASCADE,
