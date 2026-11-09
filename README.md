@@ -7,10 +7,11 @@ and building traveler reputation.
 The repository contains:
 
 - `Frontend/` — React 19 + TypeScript + Vite application.
-- `Backend/` — Fastify + TypeScript API with PostgreSQL persistence.
+- `Backend-FastAPI/` — Python 3.14 + FastAPI API with PostgreSQL persistence.
 
 ## Requirements
 
+- Python 3.10+
 - Node.js 20+
 - PostgreSQL 16+
 - A local PostgreSQL database named `porikroma`
@@ -23,27 +24,26 @@ Create the database and copy the backend environment file:
 
 ```bash
 createdb porikroma
-cp Backend/.env.example Backend/.env
+cp Backend-FastAPI/.env.example Backend-FastAPI/.env
 ```
 
-Update `Backend/.env` if your PostgreSQL username or connection settings
+Update `Backend-FastAPI/.env` if your PostgreSQL username or connection settings
 differ. Never commit `.env`.
 
 ### 2. Start the backend
 
 ```bash
-cd Backend
-npm install
-npm run dev
+cd Backend-FastAPI
+pip install -r requirements.txt
+uvicorn app.main:app --port 4000 --host 0.0.0.0
 ```
 
-The backend listens on `http://localhost:4000`. On startup it applies the
-idempotent `schema.sql` and seeds a small destination set when the database is
-empty.
+The backend listens on `http://localhost:4000`.
 
 Health checks:
 
 ```bash
+curl http://localhost:4000/api/health
 curl http://localhost:4000/health
 curl http://localhost:4000/ready
 ```
@@ -72,7 +72,7 @@ cd ../Frontend && npm run build
 The API includes authentication, destinations, trips, groups, applications,
 expenses, traveler reviews, profiles, privacy, notifications, community,
 traveler passport, tours, bookings, moderation, trip workspaces, and AI
-conversation persistence. See [Backend/README.md](./Backend/README.md) for the
+conversation persistence. See [Backend-FastAPI/ROUTE_MAP.md](./Backend-FastAPI/ROUTE_MAP.md) for the
 endpoint list.
 
 Authenticated requests use:
@@ -84,7 +84,7 @@ Authorization: Bearer <jwt>
 ## Database
 
 The PostgreSQL schema is maintained in
-[Backend/schema.sql](./Backend/schema.sql). It is additive and uses
+[Backend-FastAPI/schema.sql](./Backend-FastAPI/schema.sql). It is additive and uses
 `CREATE TABLE IF NOT EXISTS` / `CREATE INDEX IF NOT EXISTS` so existing local
 records are preserved.
 
