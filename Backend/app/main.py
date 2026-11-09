@@ -2,8 +2,11 @@ from contextlib import asynccontextmanager
 import logging
 import asyncpg
 from fastapi import FastAPI, Request, status
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from pydantic import ValidationError
+from starlette.exceptions import HTTPException as StarletteHTTPException
 import uvicorn
 from app.config import settings
 from app.db import db
@@ -40,7 +43,70 @@ app = FastAPI(
 # GLOBAL EXCEPTION HANDLERS
 # -------------------------------------------------------------
 
-# 1. Unique Constraint Violations (SQLSTATE 23505) -> 409 Conflict
+def _format_validation_errors(errors: list) -> list:
+    """Format Pydantic validation errors into JSON-safe dictionaries."""
+    formatted = []
+    for err in errors:
+        item = {}
+        for k, v in err.items():
+            if k == "ctx":
+                item[k] = (
+                    {str(ck): str(cv) for ck, cv in v.items()}
+                    if isinstance(v, dict)
+                    else str(v)
+                )
+            elif k == "input" and not isinstance(
+                v, (str, int, float, bool, list, dict, type(None))
+            ):
+                item[k] = str(v)
+            else:
+                item[k] = v
+        formatted.append(item)
+    return formatted
+
+
+# 1. Validation Errors (Pydantic / Request body & params) -> 400 Bad Request
+@app.exception_handler(RequestValidationError)
+async def handle_request_validation_error(request: Request, exc: RequestValidationError):
+    return JSONResponse(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        content={
+            "error": "Validation failed",
+            "details": _format_validation_errors(exc.errors()),
+        },
+    )
+
+
+@app.exception_handler(ValidationError)
+async def handle_pydantic_validation_error(request: Request, exc: ValidationError):
+    return JSONResponse(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        content={
+            "error": "Validation failed",
+            "details": _format_validation_errors(exc.errors()),
+        },
+    )
+
+
+# 2. HTTP Exceptions -> preserve status code and standard {"error": ...} envelope
+@app.exception_handler(StarletteHTTPException)
+async def handle_http_exception(request: Request, exc: StarletteHTTPException):
+    if isinstance(exc.detail, dict):
+        content = (
+            exc.detail
+            if "error" in exc.detail
+            else {"error": exc.detail.get("message", str(exc.detail))}
+        )
+    else:
+        content = {"error": exc.detail}
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=content,
+        headers=exc.headers,
+    )
+
+
+# 3. Unique Constraint Violations (SQLSTATE 23505) -> 409 Conflict
 @app.exception_handler(asyncpg.UniqueViolationError)
 async def handle_unique_violation(request: Request, exc: asyncpg.UniqueViolationError):
     return JSONResponse(
@@ -49,7 +115,7 @@ async def handle_unique_violation(request: Request, exc: asyncpg.UniqueViolation
     )
 
 
-# 2. Database Connection Errors -> 503 Service Unavailable
+# 4. Database Connection Errors -> 503 Service Unavailable
 CONNECTION_EXCEPTIONS = (
     asyncpg.PostgresConnectionError,
     asyncpg.CannotConnectNowError,
