@@ -10,7 +10,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 import uvicorn
 from app.config import settings
 from app.db import db
-from app.routers import auth, destinations, expenses, groups, health, notifications, reviews, trips, users
+from app.routers import auth, destinations, expenses, groups, health, notifications, passport, reviews, trips, users
 from app.serializers import PorikromaJSONResponse
 
 logger = logging.getLogger("uvicorn.error")
@@ -206,6 +206,7 @@ app.include_router(trips.router)
 app.include_router(groups.router)
 app.include_router(expenses.router)
 app.include_router(notifications.router)
+app.include_router(passport.router)
 
 
 if __name__ == "__main__":
