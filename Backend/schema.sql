@@ -261,6 +261,17 @@ CREATE TABLE IF NOT EXISTS trip_photos (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
+CREATE TABLE IF NOT EXISTS trip_map_places (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  trip_id uuid NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
+  name text NOT NULL,
+  category text NOT NULL DEFAULT 'Attraction',
+  notes text NOT NULL DEFAULT '',
+  lat double precision,
+  lng double precision,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
 CREATE TABLE IF NOT EXISTS group_messages (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   group_id uuid NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
