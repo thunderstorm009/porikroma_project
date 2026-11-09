@@ -293,10 +293,13 @@ CREATE TABLE IF NOT EXISTS community_posts (
 CREATE TABLE IF NOT EXISTS community_comments (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   post_id uuid NOT NULL REFERENCES community_posts(id) ON DELETE CASCADE,
+  parent_id uuid REFERENCES community_comments(id) ON DELETE CASCADE,
   author_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   body text NOT NULL,
   created_at timestamptz NOT NULL DEFAULT now()
 );
+
+ALTER TABLE community_comments ADD COLUMN IF NOT EXISTS parent_id uuid REFERENCES community_comments(id) ON DELETE CASCADE;
 
 CREATE TABLE IF NOT EXISTS community_reactions (
   post_id uuid REFERENCES community_posts(id) ON DELETE CASCADE,
