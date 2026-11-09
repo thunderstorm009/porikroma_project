@@ -1,5 +1,12 @@
 # Dependencies
 node_modules/
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
 
 # Environment and secrets
 .env
