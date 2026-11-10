@@ -2,12 +2,27 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus, Search } from 'lucide-react'
 import { api } from '../../api'
-import type { WorkspaceData } from '../../types'
+import type { Settlement, WorkspaceData } from '../../types'
 import { PageHeader } from '../../components/common/PageHeader'
 
 export function ExpensesPage() {
   const navigate = useNavigate()
-  const [data, setData] = useState<{ expenses: WorkspaceData['expenses']; totalSpent: number; totalBudget: number; categories: Record<string, number> } | null>(null)
+  const [data, setData] = useState<{
+    expenses: WorkspaceData['expenses']
+    totalSpent: number
+    totalBudget: number
+    categories: Record<string, number>
+    settlements?: Settlement[]
+    totalSettled?: number
+    totalOutstanding?: number
+    settlementsSummary?: {
+      settled: number
+      outstanding: number
+      pending: number
+      paid: number
+      confirmed: number
+    }
+  } | null>(null)
   const [search, setSearch] = useState('')
 
   useEffect(() => {
@@ -39,6 +54,16 @@ export function ExpensesPage() {
           <small className="positive">Across all your trips</small>
         </div>
         <div>
+          <span>Settled payments</span>
+          <strong>৳ {(data?.totalSettled || 0).toLocaleString()}</strong>
+          <small style={{ color: '#059669' }}>Confirmed received</small>
+        </div>
+        <div>
+          <span>Outstanding balance</span>
+          <strong>৳ {(data?.totalOutstanding || 0).toLocaleString()}</strong>
+          <small style={{ color: '#d97706' }}>Pending or awaiting confirmation</small>
+        </div>
+        <div>
           <span>Budget planned</span>
           <strong>৳ {(data?.totalBudget || 60700).toLocaleString()}</strong>
           <small>Total budget target</small>
@@ -53,6 +78,7 @@ export function ExpensesPage() {
           </div>
         </div>
       </div>
+
 
       <div className="expense-toolbar">
         <div className="group-filter">

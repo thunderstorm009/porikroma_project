@@ -156,12 +156,13 @@ export interface TourBooking {
 
 export interface Settlement {
   id: string
-  from_user_id?: string
+  trip_id?: string
+  from_user_id: string
   from_user_name: string
-  to_user_id?: string
+  to_user_id: string
   to_user_name: string
   amount: number
-  status: string
+  status: 'PENDING' | 'PAID' | 'CONFIRMED' | 'CANCELLED' | string
   settled_at?: string
   created_at?: string
 }

@@ -17,7 +17,9 @@ class SettlementCreateRequest(BaseModel):
 
     toUserId: str = Field(alias="to_user_id")
     amount: int = Field(gt=0)
+    status: Optional[str] = Field(default="PENDING")
 
 
 class SettlementStatusUpdateRequest(BaseModel):
-    status: Literal["PENDING", "PAID", "CANCELLED"]
+    status: str
+

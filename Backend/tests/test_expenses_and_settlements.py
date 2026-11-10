@@ -1,9 +1,10 @@
 from datetime import date, datetime
-from unittest.mock import AsyncMock, patch
+from pathlib import Path
+from unittest.mock import AsyncMock, MagicMock, patch
 import uuid
 import pytest
 from starlette.testclient import TestClient
-from app.db import db
+from app.db import Database, db
 from app.services.security import create_access_token
 
 
@@ -320,3 +321,325 @@ def test_list_and_delete_expense(client: TestClient):
         assert res_del.status_code == 200
         assert res_del.json() == {"success": True}
         mock_execute.assert_awaited_with("DELETE FROM expenses WHERE id = $1", EXPENSE_ID)
+
+
+# ---------------------------------------------------------------------------
+# 5. SETTLEMENT STATUS TRANSITIONS & PERMISSION ENFORCEMENT
+# ---------------------------------------------------------------------------
+def test_settlement_mark_as_paid_by_debtor(client: TestClient):
+    """Debtor can mark a PENDING settlement as PAID, notifying the creditor."""
+    auth_debtor = make_auth_header(USER_2_ID, "traveler2@porikroma.com", "TRAVELER")
+    pending_settlement = {
+        "id": SETTLEMENT_ID,
+        "trip_id": TRIP_ID,
+        "from_user_id": USER_2_ID,
+        "to_user_id": USER_1_ID,
+        "amount": 2500,
+        "status": "PENDING",
+        "trip_name": "Cox's Bazar Escape",
+        "from_user_name": "Samira Rahman",
+        "to_user_name": "Rafi Ahmed",
+    }
+    paid_settlement = {**pending_settlement, "status": "PAID"}
+
+    with patch.object(db, "fetchrow", new_callable=AsyncMock) as mock_fetchrow, \
+         patch.object(db, "execute", new_callable=AsyncMock) as mock_execute:
+        def side_effect(query, *args):
+            if "FROM users" in query:
+                return MOCK_USER_2
+            if "SELECT s.*" in query:
+                return pending_settlement
+            if "UPDATE expense_settlements" in query:
+                return paid_settlement
+            return None
+
+        mock_fetchrow.side_effect = side_effect
+        mock_execute.return_value = "INSERT 0 1"
+
+        res = client.patch(
+            f"/api/settlements/{SETTLEMENT_ID}/status",
+            json={"status": "PAID"},
+            headers=auth_debtor,
+        )
+        assert res.status_code == 200
+        assert res.json()["status"] == "PAID"
+        # Notification sent to creditor
+        assert mock_execute.await_count >= 1
+
+
+def test_settlement_mark_as_paid_by_creditor_rejected(client: TestClient):
+    """Creditor cannot mark a settlement as PAID (debtor must mark it)."""
+    auth_creditor = make_auth_header(USER_1_ID, "traveler1@porikroma.com", "TRAVELER")
+    pending_settlement = {
+        "id": SETTLEMENT_ID,
+        "trip_id": TRIP_ID,
+        "from_user_id": USER_2_ID,  # debtor is user 2
+        "to_user_id": USER_1_ID,    # creditor is user 1
+        "amount": 2500,
+        "status": "PENDING",
+        "trip_name": "Cox's Bazar Escape",
+        "from_user_name": "Samira Rahman",
+        "to_user_name": "Rafi Ahmed",
+    }
+
+    with patch.object(db, "fetchrow", new_callable=AsyncMock) as mock_fetchrow:
+        def side_effect(query, *args):
+            if "FROM users" in query:
+                return MOCK_USER_1
+            if "SELECT s.*" in query:
+                return pending_settlement
+            return None
+
+        mock_fetchrow.side_effect = side_effect
+
+        res = client.patch(
+            f"/api/settlements/{SETTLEMENT_ID}/status",
+            json={"status": "PAID"},
+            headers=auth_creditor,
+        )
+        assert res.status_code == 403
+        assert "debtor" in res.json()["error"].lower()
+
+
+def test_settlement_confirm_received_by_creditor(client: TestClient):
+    """Creditor can confirm receipt of a PAID settlement, marking it CONFIRMED."""
+    auth_creditor = make_auth_header(USER_1_ID, "traveler1@porikroma.com", "TRAVELER")
+    paid_settlement = {
+        "id": SETTLEMENT_ID,
+        "trip_id": TRIP_ID,
+        "from_user_id": USER_2_ID,
+        "to_user_id": USER_1_ID,
+        "amount": 2500,
+        "status": "PAID",
+        "trip_name": "Cox's Bazar Escape",
+        "from_user_name": "Samira Rahman",
+        "to_user_name": "Rafi Ahmed",
+    }
+    confirmed_settlement = {**paid_settlement, "status": "CONFIRMED", "settled_at": datetime.now()}
+
+    with patch.object(db, "fetchrow", new_callable=AsyncMock) as mock_fetchrow, \
+         patch.object(db, "execute", new_callable=AsyncMock) as mock_execute:
+        def side_effect(query, *args):
+            if "FROM users" in query:
+                return MOCK_USER_1
+            if "SELECT s.*" in query:
+                return paid_settlement
+            if "UPDATE expense_settlements" in query:
+                return confirmed_settlement
+            return None
+
+        mock_fetchrow.side_effect = side_effect
+        mock_execute.return_value = "INSERT 0 1"
+
+        res = client.patch(
+            f"/api/settlements/{SETTLEMENT_ID}/status",
+            json={"status": "CONFIRMED"},
+            headers=auth_creditor,
+        )
+        assert res.status_code == 200
+        assert res.json()["status"] == "CONFIRMED"
+        assert mock_execute.await_count >= 1
+
+
+def test_settlement_confirm_by_debtor_rejected(client: TestClient):
+    """Debtor cannot confirm their own payment receipt (creditor action)."""
+    auth_debtor = make_auth_header(USER_2_ID, "traveler2@porikroma.com", "TRAVELER")
+    paid_settlement = {
+        "id": SETTLEMENT_ID,
+        "trip_id": TRIP_ID,
+        "from_user_id": USER_2_ID,
+        "to_user_id": USER_1_ID,
+        "amount": 2500,
+        "status": "PAID",
+        "trip_name": "Cox's Bazar Escape",
+        "from_user_name": "Samira Rahman",
+        "to_user_name": "Rafi Ahmed",
+    }
+
+    with patch.object(db, "fetchrow", new_callable=AsyncMock) as mock_fetchrow:
+        def side_effect(query, *args):
+            if "FROM users" in query:
+                return MOCK_USER_2
+            if "SELECT s.*" in query:
+                return paid_settlement
+            return None
+
+        mock_fetchrow.side_effect = side_effect
+
+        res = client.patch(
+            f"/api/settlements/{SETTLEMENT_ID}/status",
+            json={"status": "CONFIRMED"},
+            headers=auth_debtor,
+        )
+        assert res.status_code == 403
+        assert "creditor" in res.json()["error"].lower()
+
+
+def test_invalid_transition_pending_to_confirmed_rejected(client: TestClient):
+    """Cannot jump directly from PENDING to CONFIRMED without debtor marking PAID."""
+    auth_creditor = make_auth_header(USER_1_ID, "traveler1@porikroma.com", "TRAVELER")
+    pending_settlement = {
+        "id": SETTLEMENT_ID,
+        "trip_id": TRIP_ID,
+        "from_user_id": USER_2_ID,
+        "to_user_id": USER_1_ID,
+        "amount": 2500,
+        "status": "PENDING",
+        "trip_name": "Cox's Bazar Escape",
+        "from_user_name": "Samira Rahman",
+        "to_user_name": "Rafi Ahmed",
+    }
+
+    with patch.object(db, "fetchrow", new_callable=AsyncMock) as mock_fetchrow:
+        def side_effect(query, *args):
+            if "FROM users" in query:
+                return MOCK_USER_1
+            if "SELECT s.*" in query:
+                return pending_settlement
+            return None
+
+        mock_fetchrow.side_effect = side_effect
+
+        res = client.patch(
+            f"/api/settlements/{SETTLEMENT_ID}/status",
+            json={"status": "CONFIRMED"},
+            headers=auth_creditor,
+        )
+        assert res.status_code == 400
+        assert "paid before confirmation" in res.json()["error"].lower()
+
+
+def test_confirmed_settlement_cannot_be_reopened(client: TestClient):
+    """Once a settlement is CONFIRMED, further status changes are rejected."""
+    auth_creditor = make_auth_header(USER_1_ID, "traveler1@porikroma.com", "TRAVELER")
+    confirmed_settlement = {
+        "id": SETTLEMENT_ID,
+        "trip_id": TRIP_ID,
+        "from_user_id": USER_2_ID,
+        "to_user_id": USER_1_ID,
+        "amount": 2500,
+        "status": "CONFIRMED",
+        "trip_name": "Cox's Bazar Escape",
+        "from_user_name": "Samira Rahman",
+        "to_user_name": "Rafi Ahmed",
+    }
+
+    with patch.object(db, "fetchrow", new_callable=AsyncMock) as mock_fetchrow:
+        def side_effect(query, *args):
+            if "FROM users" in query:
+                return MOCK_USER_1
+            if "SELECT s.*" in query:
+                return confirmed_settlement
+            return None
+
+        mock_fetchrow.side_effect = side_effect
+
+        res = client.patch(
+            f"/api/settlements/{SETTLEMENT_ID}/status",
+            json={"status": "PAID"},
+            headers=auth_creditor,
+        )
+        assert res.status_code == 400
+        assert "already confirmed" in res.json()["error"].lower()
+
+
+def test_unauthorized_user_cannot_update_settlement(client: TestClient):
+    """A user who is neither debtor nor creditor cannot change settlement status."""
+    auth_stranger = make_auth_header(USER_3_ID, "traveler3@porikroma.com", "TRAVELER")
+    pending_settlement = {
+        "id": SETTLEMENT_ID,
+        "trip_id": TRIP_ID,
+        "from_user_id": USER_2_ID,
+        "to_user_id": USER_1_ID,
+        "amount": 2500,
+        "status": "PENDING",
+        "trip_name": "Cox's Bazar Escape",
+        "from_user_name": "Samira Rahman",
+        "to_user_name": "Rafi Ahmed",
+    }
+
+    with patch.object(db, "fetchrow", new_callable=AsyncMock) as mock_fetchrow:
+        def side_effect(query, *args):
+            if "FROM users" in query:
+                return {"id": USER_3_ID, "role": "TRAVELER", "name": "Stranger", "status": "ACTIVE"}
+            if "SELECT s.*" in query:
+                return pending_settlement
+            return None
+
+        mock_fetchrow.side_effect = side_effect
+
+        res = client.patch(
+            f"/api/settlements/{SETTLEMENT_ID}/status",
+            json={"status": "PAID"},
+            headers=auth_stranger,
+        )
+        assert res.status_code == 403
+        assert "not authorized" in res.json()["error"].lower()
+
+
+def test_expenses_overview_reflects_settlement_statuses(client: TestClient):
+    """Expenses overview reflects settled and outstanding totals across settlements."""
+    auth_user = make_auth_header(USER_1_ID, "traveler1@porikroma.com", "TRAVELER")
+    mock_settlements = [
+        {"id": uuid.uuid4(), "amount": 3000, "status": "CONFIRMED", "from_user_id": USER_1_ID, "to_user_id": USER_2_ID},
+        {"id": uuid.uuid4(), "amount": 1500, "status": "PAID", "from_user_id": USER_1_ID, "to_user_id": USER_2_ID},
+        {"id": uuid.uuid4(), "amount": 1000, "status": "PENDING", "from_user_id": USER_2_ID, "to_user_id": USER_1_ID},
+    ]
+
+    with patch.object(db, "fetchrow", new_callable=AsyncMock) as mock_fetchrow, \
+         patch.object(db, "fetch", new_callable=AsyncMock) as mock_fetch:
+        def fetchrow_side_effect(query, *args):
+            if "FROM users" in query:
+                return MOCK_USER_1
+            if "FROM trips WHERE creator_id = $1" in query:
+                return {"total_budget": 50000}
+            return None
+
+        def fetch_side_effect(query, *args):
+            if "FROM expenses" in query:
+                return MOCK_EXPENSES_LIST[:2]
+            if "FROM expense_settlements" in query:
+                return mock_settlements
+            return []
+
+        mock_fetchrow.side_effect = fetchrow_side_effect
+        mock_fetch.side_effect = fetch_side_effect
+
+        res = client.get("/api/expenses/overview", headers=auth_user)
+        assert res.status_code == 200
+        data = res.json()
+        assert data["totalSettled"] == 3000
+        assert data["totalOutstanding"] == 2500  # 1500 + 1000
+        assert data["settlementsSummary"]["confirmed"] == 3000
+        assert data["settlementsSummary"]["paid"] == 1500
+        assert data["settlementsSummary"]["pending"] == 1000
+        assert len(data["settlements"]) == 3
+
+
+@pytest.mark.anyio
+async def test_migration_003_settlement_status_idempotent():
+    """Migration 003 runs multiple times without error."""
+    migration_file = Path(__file__).resolve().parent.parent / "migrations" / "003_settlement_status.sql"
+    assert migration_file.exists(), "Migration 003_settlement_status.sql should exist"
+    sql = migration_file.read_text(encoding="utf-8")
+
+    test_db = Database()
+    mock_conn = AsyncMock()
+    mock_pool = MagicMock()
+
+    acquire_ctx = AsyncMock()
+    acquire_ctx.__aenter__.return_value = mock_conn
+    acquire_ctx.__aexit__.return_value = None
+    mock_pool.acquire.return_value = acquire_ctx
+    test_db.pool = mock_pool
+
+    # Run 1
+    async with test_db.pool.acquire() as conn:
+        await conn.execute(sql)
+
+    # Run 2
+    async with test_db.pool.acquire() as conn:
+        await conn.execute(sql)
+
+    assert mock_conn.execute.await_count == 2
+

@@ -35,7 +35,7 @@ async def get_expenses_overview(
     current_user: dict = Depends(get_current_user),
     db: Database = Depends(get_db),
 ):
-    """Cross-trip expense ledger with category sums and total budget usage."""
+    """Cross-trip expense ledger with category sums, budget usage, and settlement statuses."""
     curr_uuid = uuid.UUID(str(current_user["id"]))
     query = """
         SELECT e.*, t.name AS trip_name, u.name AS paid_by_name
@@ -61,11 +61,45 @@ async def get_expenses_overview(
     )
     total_budget = budget_row["total_budget"] if budget_row and budget_row["total_budget"] else 60700
 
+    # Settlement totals across user's trips reflecting PENDING, PAID, and CONFIRMED statuses
+    settlement_query = """
+        SELECT s.*, t.name AS trip_name,
+               u1.name AS from_user_name, u2.name AS to_user_name
+        FROM expense_settlements s
+        JOIN trips t ON t.id = s.trip_id
+        JOIN users u1 ON u1.id = s.from_user_id
+        JOIN users u2 ON u2.id = s.to_user_id
+        WHERE s.from_user_id = $1 OR s.to_user_id = $1
+        ORDER BY s.created_at DESC
+    """
+    settlement_rows = await db.fetch(settlement_query, curr_uuid)
+    settlements = [record_to_dict(r) for r in settlement_rows]
+
+    total_settled = sum(
+        s.get("amount", 0) for s in settlements
+        if str(s.get("status", "")).upper() == "CONFIRMED"
+    )
+    total_outstanding = sum(
+        s.get("amount", 0) for s in settlements
+        if str(s.get("status", "")).upper() in ("PENDING", "PAID")
+    )
+    settlements_summary = {
+        "settled": total_settled,
+        "outstanding": total_outstanding,
+        "pending": sum(s.get("amount", 0) for s in settlements if str(s.get("status", "")).upper() == "PENDING"),
+        "paid": sum(s.get("amount", 0) for s in settlements if str(s.get("status", "")).upper() == "PAID"),
+        "confirmed": total_settled,
+    }
+
     return {
         "expenses": expenses,
         "totalSpent": total_spent,
         "totalBudget": total_budget,
         "categories": categories,
+        "settlements": settlements,
+        "totalSettled": total_settled,
+        "totalOutstanding": total_outstanding,
+        "settlementsSummary": settlements_summary,
     }
 
 
@@ -226,13 +260,170 @@ async def create_trip_settlement(
     if u_uuid == to_uuid:
         return JSONResponse(status_code=400, content={"error": "Cannot settle with yourself"})
 
+    target_status = "PENDING"
+    if data.status and data.status.strip().upper() in ("PENDING", "PAID", "CONFIRMED"):
+        target_status = data.status.strip().upper()
+
     query = """
         INSERT INTO expense_settlements (trip_id, from_user_id, to_user_id, amount, status)
-        VALUES ($1, $2, $3, $4, 'PAID')
+        VALUES ($1, $2, $3, $4, $5)
         RETURNING *
     """
-    row = await db.fetchrow(query, t_uuid, u_uuid, to_uuid, data.amount)
-    return JSONResponse(status_code=status.HTTP_201_CREATED, content=record_to_dict(row))
+    row = await db.fetchrow(query, t_uuid, u_uuid, to_uuid, data.amount, target_status)
+    settlement_dict = record_to_dict(row)
+
+    # Notify creditor of new settlement
+    try:
+        trip = await db.fetchrow("SELECT name FROM trips WHERE id = $1", t_uuid)
+        trip_name = trip["name"] if trip else "expedition"
+        payer_name = current_user.get("name", "A traveler")
+        msg = (
+            f"{payer_name} recorded a settlement of ৳{data.amount:,} as paid for {trip_name}. Please confirm receipt."
+            if target_status == "PAID"
+            else f"{payer_name} recorded a pending settlement of ৳{data.amount:,} for {trip_name}."
+        )
+        await db.execute(
+            """
+            INSERT INTO notifications (user_id, type, detail, link)
+            VALUES ($1, $2, $3, $4)
+            """,
+            to_uuid,
+            "SETTLEMENT_RECORDED",
+            msg,
+            f"/trips/{id}/expenses",
+        )
+    except Exception:
+        pass
+
+    return JSONResponse(status_code=status.HTTP_201_CREATED, content=settlement_dict)
+
+
+async def perform_settlement_transition(
+    s_uuid: uuid.UUID,
+    target_status: str,
+    current_user: dict,
+    db: Database,
+) -> tuple[Optional[dict], Optional[dict], int]:
+    """Execute status transition on expense_settlements with permission and workflow validation.
+    Returns (result_dict, error_dict, status_code).
+    """
+    target_status = target_status.strip().upper()
+    if target_status not in ("PENDING", "PAID", "CONFIRMED", "CANCELLED"):
+        return None, {"error": f"Invalid settlement status: {target_status}"}, 400
+
+    settlement = await db.fetchrow(
+        """
+        SELECT s.*, t.name AS trip_name,
+               u1.name AS from_user_name, u2.name AS to_user_name
+        FROM expense_settlements s
+        JOIN trips t ON t.id = s.trip_id
+        JOIN users u1 ON u1.id = s.from_user_id
+        JOIN users u2 ON u2.id = s.to_user_id
+        WHERE s.id = $1
+        """,
+        s_uuid,
+    )
+    if not settlement:
+        return None, {"error": "Settlement not found"}, 404
+
+    curr_id = str(current_user["id"])
+    from_id = str(settlement["from_user_id"])
+    to_id = str(settlement["to_user_id"])
+    is_debtor = (curr_id == from_id)
+    is_creditor = (curr_id == to_id)
+    is_admin = (current_user.get("role") == "ADMIN")
+
+    if not is_debtor and not is_creditor and not is_admin:
+        return None, {"error": "You are not authorized to update this settlement"}, 403
+
+    current_status = str(settlement["status"]).upper()
+
+    # Idempotent: already at requested status
+    if current_status == target_status:
+        return record_to_dict(settlement), None, 200
+
+    # Cannot transition out of CONFIRMED
+    if current_status == "CONFIRMED":
+        return None, {"error": "Settlement is already confirmed"}, 400
+
+    # Transition 1: Mark as PAID (debtor action)
+    if target_status == "PAID":
+        if not is_debtor and not is_admin:
+            return None, {"error": "Only the debtor can mark a settlement as paid"}, 403
+        if current_status != "PENDING":
+            return None, {"error": f"Cannot mark as paid from status {current_status}"}, 400
+
+        row = await db.fetchrow(
+            "UPDATE expense_settlements SET status = 'PAID' WHERE id = $1 RETURNING *",
+            s_uuid,
+        )
+        try:
+            await db.execute(
+                """
+                INSERT INTO notifications (user_id, type, detail, link)
+                VALUES ($1, $2, $3, $4)
+                """,
+                settlement["to_user_id"],
+                "SETTLEMENT_PAID",
+                f"{settlement['from_user_name']} marked settlement of ৳{settlement['amount']:,} as paid for {settlement['trip_name']}. Please confirm receipt.",
+                f"/trips/{settlement['trip_id']}/expenses",
+            )
+        except Exception:
+            pass
+        return (record_to_dict(row) if row else {**record_to_dict(settlement), "status": "PAID"}), None, 200
+
+    # Transition 2: Confirm received (creditor action)
+    if target_status == "CONFIRMED":
+        if not is_creditor and not is_admin:
+            return None, {"error": "Only the creditor can confirm receipt of a settlement"}, 403
+        if current_status == "PENDING":
+            return None, {"error": "Invalid transition: debtor must mark settlement as paid before confirmation"}, 400
+        if current_status != "PAID":
+            return None, {"error": f"Cannot confirm settlement from status {current_status}"}, 400
+
+        row = await db.fetchrow(
+            "UPDATE expense_settlements SET status = 'CONFIRMED', settled_at = now() WHERE id = $1 RETURNING *",
+            s_uuid,
+        )
+        try:
+            await db.execute(
+                """
+                INSERT INTO notifications (user_id, type, detail, link)
+                VALUES ($1, $2, $3, $4)
+                """,
+                settlement["from_user_id"],
+                "SETTLEMENT_CONFIRMED",
+                f"{settlement['to_user_name']} confirmed receipt of ৳{settlement['amount']:,} for {settlement['trip_name']}. Settlement completed!",
+                f"/trips/{settlement['trip_id']}/expenses",
+            )
+        except Exception:
+            pass
+        return (record_to_dict(row) if row else {**record_to_dict(settlement), "status": "CONFIRMED", "settled_at": datetime.now()}), None, 200
+
+    # Transition 3: CANCELLED
+    if target_status == "CANCELLED":
+        row = await db.fetchrow(
+            "UPDATE expense_settlements SET status = 'CANCELLED' WHERE id = $1 RETURNING *",
+            s_uuid,
+        )
+        other_party = settlement["to_user_id"] if is_debtor else settlement["from_user_id"]
+        actor_name = settlement["from_user_name"] if is_debtor else settlement["to_user_name"]
+        try:
+            await db.execute(
+                """
+                INSERT INTO notifications (user_id, type, detail, link)
+                VALUES ($1, $2, $3, $4)
+                """,
+                other_party,
+                "SETTLEMENT_CANCELLED",
+                f"{actor_name} cancelled settlement of ৳{settlement['amount']:,} for {settlement['trip_name']}.",
+                f"/trips/{settlement['trip_id']}/expenses",
+            )
+        except Exception:
+            pass
+        return (record_to_dict(row) if row else {**record_to_dict(settlement), "status": "CANCELLED"}), None, 200
+
+    return None, {"error": f"Cannot transition settlement from {current_status} to {target_status}"}, 400
 
 
 @router.patch("/api/settlements/{id}/status")
@@ -242,20 +433,53 @@ async def update_settlement_status(
     current_user: dict = Depends(get_current_user),
     db: Database = Depends(get_db),
 ):
-    """Update payment status of a settlement (PENDING, PAID, CANCELLED)."""
+    """Update payment status of a settlement with permission and workflow enforcement."""
     try:
         s_uuid = uuid.UUID(id)
     except (ValueError, TypeError):
         return JSONResponse(status_code=404, content={"error": "Settlement not found"})
 
-    row = await db.fetchrow(
-        "UPDATE expense_settlements SET status = $1 WHERE id = $2 RETURNING *",
-        data.status,
-        s_uuid,
-    )
-    if not row:
+    result, err, code = await perform_settlement_transition(s_uuid, data.status, current_user, db)
+    if err:
+        return JSONResponse(status_code=code, content=err)
+    return result
+
+
+@router.post("/api/settlements/{id}/pay")
+async def mark_settlement_as_paid(
+    id: str,
+    current_user: dict = Depends(get_current_user),
+    db: Database = Depends(get_db),
+):
+    """Debtor marks a settlement as paid."""
+    try:
+        s_uuid = uuid.UUID(id)
+    except (ValueError, TypeError):
         return JSONResponse(status_code=404, content={"error": "Settlement not found"})
-    return record_to_dict(row)
+
+    result, err, code = await perform_settlement_transition(s_uuid, "PAID", current_user, db)
+    if err:
+        return JSONResponse(status_code=code, content=err)
+    return result
+
+
+@router.post("/api/settlements/{id}/confirm")
+async def confirm_settlement_received(
+    id: str,
+    current_user: dict = Depends(get_current_user),
+    db: Database = Depends(get_db),
+):
+    """Creditor confirms receipt of payment for a settlement."""
+    try:
+        s_uuid = uuid.UUID(id)
+    except (ValueError, TypeError):
+        return JSONResponse(status_code=404, content={"error": "Settlement not found"})
+
+    result, err, code = await perform_settlement_transition(s_uuid, "CONFIRMED", current_user, db)
+    if err:
+        return JSONResponse(status_code=code, content=err)
+    return result
+
 
 
 # -------------------------------------------------------------

@@ -369,7 +369,8 @@ CREATE TABLE IF NOT EXISTS expense_settlements (
   from_user_id uuid NOT NULL REFERENCES users(id),
   to_user_id uuid NOT NULL REFERENCES users(id),
   amount integer NOT NULL CHECK (amount > 0),
-  status text NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'PAID', 'CANCELLED')),
+  status text NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'PAID', 'CONFIRMED', 'CANCELLED')),
+  settled_at timestamptz,
   created_at timestamptz NOT NULL DEFAULT now(),
   CHECK (from_user_id <> to_user_id)
 );
