@@ -1,10 +1,10 @@
 import React, { useState } from 'react'
 import {
   Bell, Bot, CalendarDays, ChevronDown, ChevronRight, Compass,
-  Edit3, Globe2, LayoutDashboard, LogOut, MapPin, MessageCircle,
+  Edit3, Globe2, LayoutDashboard, LogOut, Luggage, MapPin, MessageCircle,
   Plus, Search, Settings, ShieldCheck, Users, Wallet
 } from 'lucide-react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useNotifications } from '../../context/NotificationsContext'
 import type { PlatformRole } from '../../types'
@@ -41,6 +41,7 @@ export function RouteFrame({ children }: RouteFrameProps) {
   const links = [
     { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { label: 'Trips', path: '/trips', icon: Compass },
+    { label: 'Tours', path: '/tours', icon: Luggage },
     { label: 'Group travel', path: '/group-travel/explore', icon: Users },
     { label: 'AI planner', path: '/ai-assistant', icon: Bot },
     { label: 'Destinations', path: '/destinations', icon: Globe2 },
@@ -53,36 +54,46 @@ export function RouteFrame({ children }: RouteFrameProps) {
   return (
     <div className="route-shell">
       <aside className="sidebar route-sidebar">
-        <div className="brand">
+        <div className="brand" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
           <span className="brand-mark">p</span>
           <span>porikroma</span>
         </div>
 
-        <div className="workspace-switcher" onClick={() => setUserMenuOpen(!userMenuOpen)} style={{ cursor: 'pointer', position: 'relative' }}>
-          <div className="avatar">{currentUser?.name?.[0] || 'R'}</div>
-          <div>
-            <strong>{currentUser?.name || 'Rafi Ahmed'}</strong>
-            <small>{currentUser?.role || 'TRAVELER'} workspace</small>
-          </div>
-          <ChevronDown size={15} />
-
-          {userMenuOpen && (
-            <div className="dropdown-menu" onClick={(e) => e.stopPropagation()}>
-              <div style={{ padding: '8px 14px', borderBottom: '1px solid #edf0ea', fontSize: '11px', color: '#77827a' }}>
-                Signed in as <strong>{currentUser?.email}</strong>
-              </div>
-              <button className="dropdown-item" onClick={() => { setUserMenuOpen(false); navigate('/profile') }}><Edit3 size={14} /> Profile</button>
-              <button className="dropdown-item" onClick={() => { setUserMenuOpen(false); navigate('/settings') }}><Settings size={14} /> Settings & Privacy</button>
-              <div style={{ padding: '6px 14px 2px', fontSize: '10px', textTransform: 'uppercase', color: '#88948a', fontWeight: 600 }}>Switch Role:</div>
-              <button className="dropdown-item" onClick={() => switchAccount('TRAVELER')}>Traveler view</button>
-              <button className="dropdown-item" onClick={() => switchAccount('TOUR_PLANNER')}>Tour planner view</button>
-              <button className="dropdown-item" onClick={() => switchAccount('ADMIN')}>Admin view</button>
-              <div style={{ borderTop: '1px solid #edf0ea', marginTop: '4px' }}>
-                <button className="dropdown-item" style={{ color: '#b33' }} onClick={logout}><LogOut size={14} /> Sign out</button>
-              </div>
+        {currentUser ? (
+          <div className="workspace-switcher" onClick={() => setUserMenuOpen(!userMenuOpen)} style={{ cursor: 'pointer', position: 'relative' }}>
+            <div className="avatar">{currentUser?.name?.[0] || 'R'}</div>
+            <div>
+              <strong>{currentUser?.name || 'Rafi Ahmed'}</strong>
+              <small>{currentUser?.role || 'TRAVELER'} workspace</small>
             </div>
-          )}
-        </div>
+            <ChevronDown size={15} />
+
+            {userMenuOpen && (
+              <div className="dropdown-menu" onClick={(e) => e.stopPropagation()}>
+                <div style={{ padding: '8px 14px', borderBottom: '1px solid #edf0ea', fontSize: '11px', color: '#77827a' }}>
+                  Signed in as <strong>{currentUser?.email}</strong>
+                </div>
+                <button className="dropdown-item" onClick={() => { setUserMenuOpen(false); navigate('/profile') }}><Edit3 size={14} /> Profile</button>
+                <button className="dropdown-item" onClick={() => { setUserMenuOpen(false); navigate('/settings') }}><Settings size={14} /> Settings & Privacy</button>
+                <div style={{ padding: '6px 14px 2px', fontSize: '10px', textTransform: 'uppercase', color: '#88948a', fontWeight: 600 }}>Switch Role:</div>
+                <button className="dropdown-item" onClick={() => switchAccount('TRAVELER')}>Traveler view</button>
+                <button className="dropdown-item" onClick={() => switchAccount('TOUR_PLANNER')}>Tour planner view</button>
+                <button className="dropdown-item" onClick={() => switchAccount('ADMIN')}>Admin view</button>
+                <div style={{ borderTop: '1px solid #edf0ea', marginTop: '4px' }}>
+                  <button className="dropdown-item" style={{ color: '#b33' }} onClick={logout}><LogOut size={14} /> Sign out</button>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="workspace-switcher" onClick={() => navigate('/login')} style={{ cursor: 'pointer' }}>
+            <div className="avatar" style={{ background: '#e1e8df', color: '#3f5847' }}>?</div>
+            <div>
+              <strong>Guest Explorer</strong>
+              <small style={{ color: 'var(--green)' }}>Sign in to book</small>
+            </div>
+          </div>
+        )}
 
         <p className="nav-label">Workspace</p>
         <nav className="primary-nav">
@@ -107,24 +118,35 @@ export function RouteFrame({ children }: RouteFrameProps) {
           )}
         </nav>
 
-        <div className="sidebar-bottom">
-          <button className="nav-item" onClick={() => navigate('/notifications')}>
-            <Bell size={18} />
-            <span>Notifications</span>
-            {unreadCount > 0 && <span className="notification-count">{unreadCount}</span>}
-          </button>
-          <button className="nav-item" onClick={() => navigate('/settings')}>
-            <Settings size={18} />
-            <span>Settings</span>
-          </button>
-          <div className="profile-row" onClick={() => navigate('/profile')} style={{ cursor: 'pointer' }}>
-            <div className="avatar">{currentUser?.name?.[0] || 'R'}</div>
-            <div>
-              <strong>{currentUser?.name || 'Rafi Ahmed'}</strong>
-              <small>View profile</small>
+        {currentUser ? (
+          <div className="sidebar-bottom">
+            <button className="nav-item" onClick={() => navigate('/notifications')}>
+              <Bell size={18} />
+              <span>Notifications</span>
+              {unreadCount > 0 && <span className="notification-count">{unreadCount}</span>}
+            </button>
+            <button className="nav-item" onClick={() => navigate('/settings')}>
+              <Settings size={18} />
+              <span>Settings</span>
+            </button>
+            <div className="profile-row" onClick={() => navigate('/profile')} style={{ cursor: 'pointer' }}>
+              <div className="avatar">{currentUser?.name?.[0] || 'R'}</div>
+              <div>
+                <strong>{currentUser?.name || 'Rafi Ahmed'}</strong>
+                <small>View profile</small>
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="sidebar-bottom" style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '12px' }}>
+            <button className="primary-btn small" onClick={() => navigate('/login')} style={{ width: '100%', justifyContent: 'center' }}>
+              Sign in
+            </button>
+            <button className="outline-btn small" onClick={() => navigate('/register')} style={{ width: '100%', justifyContent: 'center' }}>
+              Register
+            </button>
+          </div>
+        )}
       </aside>
 
       <main className="main-content">
@@ -142,50 +164,59 @@ export function RouteFrame({ children }: RouteFrameProps) {
               <kbd>⌘ K</kbd>
             </div>
 
-            <div style={{ position: 'relative' }}>
-              <button className="icon-btn notification-btn" onClick={() => setNotificationsOpen(!notificationsOpen)}>
-                <Bell size={19} />
-                {unreadCount > 0 && <i />}
-              </button>
-
-              {notificationsOpen && (
-                <div className="dropdown-menu" style={{ width: '320px', right: 0 }} onClick={(e) => e.stopPropagation()}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', borderBottom: '1px solid #edf0ea' }}>
-                    <strong>Notifications</strong>
-                    <button style={{ fontSize: '11px', color: 'var(--green)' }} onClick={() => markAllAsRead()}>Mark all read</button>
-                  </div>
-                  <div style={{ maxHeight: '280px', overflowY: 'auto' }}>
-                    {notificationsList.length ? (
-                      notificationsList.slice(0, 5).map((n) => (
-                        <div key={n.id} style={{ padding: '10px 14px', borderBottom: '1px solid #edf0ea', fontSize: '11px', cursor: 'pointer', background: n.read ? '#fff' : '#f6faf4' }}
-                          onClick={() => {
-                            markAsRead(n.id)
-                            setNotificationsOpen(false)
-                            if (n.link) navigate(n.link)
-                          }}>
-                          <strong>{n.type}</strong>
-                          <p style={{ margin: '3px 0 0', color: '#6d7770' }}>{n.detail}</p>
-                        </div>
-                      ))
-                    ) : (
-                      <div style={{ padding: '20px', textAlign: 'center', color: '#889' }}>No notifications</div>
-                    )}
-                  </div>
-                  <button className="dropdown-item" style={{ justifyContent: 'center', borderTop: '1px solid #edf0ea', fontWeight: 600 }}
-                    onClick={() => { setNotificationsOpen(false); navigate('/notifications') }}>
-                    See all notifications
+            {currentUser ? (
+              <>
+                <div style={{ position: 'relative' }}>
+                  <button className="icon-btn notification-btn" onClick={() => setNotificationsOpen(!notificationsOpen)}>
+                    <Bell size={19} />
+                    {unreadCount > 0 && <i />}
                   </button>
-                </div>
-              )}
-            </div>
 
-            <Link className="quick-add" to="/trips/create">
-              <Plus size={17} /> New trip
-            </Link>
+                  {notificationsOpen && (
+                    <div className="dropdown-menu" style={{ width: '320px', right: 0 }} onClick={(e) => e.stopPropagation()}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', borderBottom: '1px solid #edf0ea' }}>
+                        <strong>Notifications</strong>
+                        <button style={{ fontSize: '11px', color: 'var(--green)' }} onClick={() => markAllAsRead()}>Mark all read</button>
+                      </div>
+                      <div style={{ maxHeight: '280px', overflowY: 'auto' }}>
+                        {notificationsList.length ? (
+                          notificationsList.slice(0, 5).map((n) => (
+                            <div key={n.id} style={{ padding: '10px 14px', borderBottom: '1px solid #edf0ea', fontSize: '11px', cursor: 'pointer', background: n.read ? '#fff' : '#f6faf4' }}
+                              onClick={() => {
+                                markAsRead(n.id)
+                                setNotificationsOpen(false)
+                                if (n.link) navigate(n.link)
+                              }}>
+                              <strong>{n.type}</strong>
+                              <p style={{ margin: '3px 0 0', color: '#6d7770' }}>{n.detail}</p>
+                            </div>
+                          ))
+                        ) : (
+                          <div style={{ padding: '20px', textAlign: 'center', color: '#889' }}>No notifications</div>
+                        )}
+                      </div>
+                      <button className="dropdown-item" style={{ justifyContent: 'center', borderTop: '1px solid #edf0ea', fontWeight: 600 }}
+                        onClick={() => { setNotificationsOpen(false); navigate('/notifications') }}>
+                        See all notifications
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <Link className="quick-add" to="/trips/create">
+                  <Plus size={17} /> New trip
+                </Link>
+              </>
+            ) : (
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button className="outline-btn small" onClick={() => navigate('/login')}>Sign in</button>
+                <button className="primary-btn small" onClick={() => navigate('/register')}>Start planning</button>
+              </div>
+            )}
           </div>
         </header>
 
-        {children}
+        {children || <Outlet />}
       </main>
 
       {/* Global Quick Search Modal */}

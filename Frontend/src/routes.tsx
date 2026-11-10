@@ -1,9 +1,10 @@
 import { lazy, Suspense } from 'react'
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
 
 import { ProtectedLayout } from './components/layout/ProtectedLayout'
 import { RoleGuard } from './components/layout/RoleGuard'
 import { RoleFrame } from './components/layout/RoleFrame'
+import { RouteFrame } from './components/layout/RouteFrame'
 
 // Standard pages (loaded directly for instant initial interaction)
 import { PublicLanding } from './pages/public/PublicLanding'
@@ -14,6 +15,8 @@ import { CreateTrip } from './pages/traveler/CreateTrip'
 import { TripWorkspace } from './pages/traveler/TripWorkspace'
 import { DestinationsPage } from './pages/traveler/DestinationsPage'
 import { DestinationDetails } from './pages/traveler/DestinationDetails'
+import { ToursPage } from './pages/traveler/ToursPage'
+import { TourDetailsPage } from './pages/traveler/TourDetailsPage'
 import { GroupExplore } from './pages/traveler/GroupExplore'
 import { GroupDetailsPage } from './pages/traveler/GroupDetailsPage'
 import { MyGroupsPage } from './pages/traveler/MyGroupsPage'
@@ -64,6 +67,12 @@ export function AppRoutes() {
         <Route path="/forgot-password" element={<AuthPage mode="forgot" />} />
         <Route path="/reset-password" element={<AuthPage mode="reset" />} />
         <Route path="/verify-email" element={<AuthPage mode="verify" />} />
+
+        {/* Public / Traveler Tour Discovery (Accessible to both guests and logged-in travelers) */}
+        <Route element={<RouteFrame><Outlet /></RouteFrame>}>
+          <Route path="/tours" element={<ToursPage />} />
+          <Route path="/tours/:id" element={<TourDetailsPage />} />
+        </Route>
 
         {/* Protected Traveler Routes */}
         <Route element={<ProtectedLayout />}>

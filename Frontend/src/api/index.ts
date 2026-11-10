@@ -9,3 +9,5 @@ export * from './admin'
 export * from './community'
 export * from './notifications'
 export * from './footprint'
+export * from './tours'
+

@@ -87,18 +87,21 @@ export interface WorkspaceData {
 export interface Tour {
   id: string
   planner_id: string
+  planner_name?: string
+  planner_bio?: string
   title: string
   destination_id: string
   destination_name?: string
   destination_image?: string
-  duration_days: number
+  district?: string
+  division?: string
+  duration_days?: number
   price: number
   capacity: number
   description: string
-  included?: string[]
-  itinerary?: any[]
-  published: boolean
+  status?: string
   departures_count?: number
+  departures?: TourDeparture[]
   created_at: string
 }
 
@@ -108,10 +111,10 @@ export interface TourDeparture {
   start_date: string
   end_date: string
   capacity: number
-  booked_seats: number
-  available_seats: number
-  status: 'SCHEDULED' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED'
-  created_at: string
+  status: string
+  booked_count?: number
+  available_seats?: number
+  created_at?: string
 }
 
 export interface TourBooking {
