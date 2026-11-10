@@ -10,71 +10,10 @@ import {
 import { BrowserRouter, Link, Navigate, Outlet, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { api } from './api'
 
-type PlatformRole = 'TRAVELER' | 'TOUR_PLANNER' | 'ADMIN'
-
-interface User {
-  id: string
-  name: string
-  email: string
-  role: PlatformRole
-}
-
-interface Destination {
-  id: string
-  name: string
-  division: string
-  district: string
-  description: string
-  category: string
-  estimated_budget: number
-  image?: string
-  rating?: number
-  review_count?: number
-}
-
-interface Trip {
-  id: string
-  creator_id: string
-  destination_id: string
-  name: string
-  start_date: string
-  end_date: string
-  status: 'DRAFT' | 'PLANNING' | 'UPCOMING' | 'COMPLETED' | 'CANCELLED'
-  visibility: 'PUBLIC' | 'PRIVATE'
-  budget: number
-  description: string
-  destination_name?: string
-  destination_image?: string
-  total_spent?: number
-  member_count?: number
-}
-
-interface GroupExpedition {
-  id: string
-  trip_id: string
-  organizer_id: string
-  title: string
-  capacity: number
-  budget_per_person: number
-  published: boolean
-  trip_name?: string
-  start_date?: string
-  end_date?: string
-  destination_name?: string
-  destination_image?: string
-  organizer_name?: string
-  organizer_avatar?: string
-  member_count?: number
-}
-
-interface NotificationItem {
-  id: string
-  type: string
-  detail: string
-  link?: string
-  read: boolean
-  created_at: string
-}
+import type { PlatformRole, User, Destination, Trip, GroupExpedition, NotificationItem, WorkspaceData } from './types'
+import { formatBDT, formatDate, formatTime, getInitials, calcBudgetUtilization, dateToKey } from './utils/formatters'
+import { AuthProvider, useAuth } from './context/AuthContext'
+import { NotificationsProvider, useNotifications } from './context/NotificationsContext'
 
 function PageHeader({ eyebrow, title, description, action }: { eyebrow?: string; title: string; description?: string; action?: React.ReactNode }) {
   return (
@@ -119,6 +58,7 @@ function PublicLanding() {
 // -------------------------------------------------------------
 function AuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' | 'reset' | 'verify' }) {
   const navigate = useNavigate()
+  const { login, register, demoLogin } = useAuth()
   const [searchParams] = useSearchParams()
   const [submitted, setSubmitted] = useState(false)
   const [role, setRole] = useState<PlatformRole>('TRAVELER')
@@ -142,15 +82,8 @@ function AuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' | 'reset' | 
     setError('')
     setLoading(true)
     try {
-      const result = await api<{ user: User; token: string }>('/api/auth/demo-login', {
-        method: 'POST',
-        body: JSON.stringify({ role: targetRole }),
-      })
-      localStorage.setItem('porikroma-auth', 'true')
-      localStorage.setItem('porikroma-token', result.token)
-      localStorage.setItem('porikroma-role', result.user.role)
-      localStorage.setItem('porikroma-user', JSON.stringify(result.user))
-      navigate({ TRAVELER: '/dashboard', TOUR_PLANNER: '/planner/dashboard', ADMIN: '/admin/dashboard' }[result.user.role])
+      const loggedUser = await demoLogin(targetRole)
+      navigate({ TRAVELER: '/dashboard', TOUR_PLANNER: '/planner/dashboard', ADMIN: '/admin/dashboard' }[loggedUser.role])
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Demo sign-in failed')
     } finally {
@@ -164,25 +97,11 @@ function AuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' | 'reset' | 
     setLoading(true)
     try {
       if (mode === 'login') {
-        const result = await api<{ user: User; token: string }>('/api/auth/login', {
-          method: 'POST',
-          body: JSON.stringify({ email, password }),
-        })
-        localStorage.setItem('porikroma-auth', 'true')
-        localStorage.setItem('porikroma-token', result.token)
-        localStorage.setItem('porikroma-role', result.user.role)
-        localStorage.setItem('porikroma-user', JSON.stringify(result.user))
-        navigate({ TRAVELER: '/dashboard', TOUR_PLANNER: '/planner/dashboard', ADMIN: '/admin/dashboard' }[result.user.role])
+        const loggedUser = await login(email, password)
+        navigate({ TRAVELER: '/dashboard', TOUR_PLANNER: '/planner/dashboard', ADMIN: '/admin/dashboard' }[loggedUser.role])
       } else if (mode === 'register') {
-        const result = await api<{ user: User; token: string }>('/api/auth/register', {
-          method: 'POST',
-          body: JSON.stringify({ name, email, password, role }),
-        })
-        localStorage.setItem('porikroma-auth', 'true')
-        localStorage.setItem('porikroma-token', result.token)
-        localStorage.setItem('porikroma-role', result.user.role)
-        localStorage.setItem('porikroma-user', JSON.stringify(result.user))
-        navigate({ TRAVELER: '/dashboard', TOUR_PLANNER: '/planner/dashboard', ADMIN: '/admin/dashboard' }[result.user.role])
+        const loggedUser = await register(name, email, password, role)
+        navigate({ TRAVELER: '/dashboard', TOUR_PLANNER: '/planner/dashboard', ADMIN: '/admin/dashboard' }[loggedUser.role])
       } else if (mode === 'forgot') {
         const result = await api<{ success: boolean; message: string; resetToken?: string; resetLink?: string }>('/api/auth/forgot-password', {
           method: 'POST',
@@ -315,55 +234,32 @@ function AuthPage({ mode }: { mode: 'login' | 'register' | 'forgot' | 'reset' | 
 // PROTECTED LAYOUT & NAVIGATION FRAME
 // -------------------------------------------------------------
 function ProtectedLayout() {
-  if (!localStorage.getItem('porikroma-auth')) return <Navigate to="/login" replace />
-  return <RouteFrame><Outlet /></RouteFrame>
+  const { isAuthenticated, isLoading } = useAuth()
+  if (isLoading) return null
+  return isAuthenticated ? <RouteFrame><Outlet /></RouteFrame> : <Navigate to="/login" replace />
 }
 
 function RouteFrame({ children }: { children?: React.ReactNode }) {
   const navigate = useNavigate()
   const location = useLocation()
-  const [unreadCount, setUnreadCount] = useState(0)
-  const [currentUser, setCurrentUser] = useState<User | null>(null)
+  const { user: currentUser, logout: authLogout, demoLogin } = useAuth()
+  const { notifications: notificationsList, unreadCount, markAsRead, markAllAsRead } = useNotifications()
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<{ id: string; title: string; category: string; link: string }[]>([])
   const [notificationsOpen, setNotificationsOpen] = useState(false)
-  const [notificationsList, setNotificationsList] = useState<NotificationItem[]>([])
-
-  useEffect(() => {
-    // Load current user profile
-    api<User>('/api/me').then(setCurrentUser).catch(() => undefined)
-    // Load notifications count
-    api<NotificationItem[]>('/api/notifications')
-      .then((items) => {
-        setNotificationsList(items)
-        setUnreadCount(items.filter((i) => !i.read).length)
-      })
-      .catch(() => undefined)
-  }, [location.pathname])
 
   const logout = () => {
-    localStorage.removeItem('porikroma-auth')
-    localStorage.removeItem('porikroma-token')
-    localStorage.removeItem('porikroma-role')
-    localStorage.removeItem('porikroma-user')
+    authLogout()
     navigate('/login')
   }
 
   const switchAccount = async (role: PlatformRole) => {
     setUserMenuOpen(false)
     try {
-      const result = await api<{ user: User; token: string }>('/api/auth/demo-login', {
-        method: 'POST',
-        body: JSON.stringify({ role }),
-      })
-      localStorage.setItem('porikroma-token', result.token)
-      localStorage.setItem('porikroma-role', result.user.role)
-      localStorage.setItem('porikroma-user', JSON.stringify(result.user))
-      setCurrentUser(result.user)
-      navigate({ TRAVELER: '/dashboard', TOUR_PLANNER: '/planner/dashboard', ADMIN: '/admin/dashboard' }[role])
-      window.location.reload()
+      const switched = await demoLogin(role)
+      navigate({ TRAVELER: '/dashboard', TOUR_PLANNER: '/planner/dashboard', ADMIN: '/admin/dashboard' }[switched.role])
     } catch {
       navigate('/login')
     }
@@ -503,19 +399,14 @@ function RouteFrame({ children }: { children?: React.ReactNode }) {
                 <div className="dropdown-menu" style={{ width: '320px', right: 0 }} onClick={(e) => e.stopPropagation()}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', borderBottom: '1px solid #edf0ea' }}>
                     <strong>Notifications</strong>
-                    <button style={{ fontSize: '11px', color: 'var(--green)' }} onClick={() => {
-                      api('/api/notifications/read-all', { method: 'PATCH' }).then(() => {
-                        setNotificationsList((prev) => prev.map((n) => ({ ...n, read: true })))
-                        setUnreadCount(0)
-                      })
-                    }}>Mark all read</button>
+                    <button style={{ fontSize: '11px', color: 'var(--green)' }} onClick={() => markAllAsRead()}>Mark all read</button>
                   </div>
                   <div style={{ maxHeight: '280px', overflowY: 'auto' }}>
                     {notificationsList.length ? (
                       notificationsList.slice(0, 5).map((n) => (
                         <div key={n.id} style={{ padding: '10px 14px', borderBottom: '1px solid #edf0ea', fontSize: '11px', cursor: 'pointer', background: n.read ? '#fff' : '#f6faf4' }}
                           onClick={() => {
-                            api(`/api/notifications/${n.id}/read`, { method: 'PATCH' })
+                            markAsRead(n.id)
                             setNotificationsOpen(false)
                             if (n.link) navigate(n.link)
                           }}>
@@ -1030,17 +921,6 @@ function CreateTrip() {
 // -------------------------------------------------------------
 // INDIVIDUAL TRIP WORKSPACE (/trips/:tripId) - ALL 8 TABS
 // -------------------------------------------------------------
-interface WorkspaceData {
-  trip: Trip
-  itinerary: { id: string; day_date: string; title: string; location?: string; notes?: string; sort_order: number }[]
-  checklist: { id: string; title: string; completed: boolean }[]
-  notes: { id: string; body: string; author_name?: string; created_at: string }[]
-  photos: { id: string; url: string; caption?: string }[]
-  members: { id: string; name: string; email: string; role: string }[]
-  expenses: { id: string; title: string; category: string; amount: number; expense_date: string; paid_by_name: string }[]
-  mapPlaces: { id: string; name: string; category: string; notes?: string }[]
-  group?: GroupExpedition | null
-}
 
 function TripWorkspace() {
   const { tripId = '' } = useParams()
@@ -3247,26 +3127,16 @@ function CommunityPage() {
 // -------------------------------------------------------------
 function NotificationsPage() {
   const navigate = useNavigate()
-  const [items, setItems] = useState<NotificationItem[]>([])
-
-  const load = () => api<NotificationItem[]>('/api/notifications').then(setItems).catch(() => undefined)
-  useEffect(() => { load() }, [])
+  const { notifications: items, markAsRead, markAllAsRead, deleteNotification } = useNotifications()
 
   const markRead = async (id: string, link?: string) => {
-    await api(`/api/notifications/${id}/read`, { method: 'PATCH' })
-    load()
+    await markAsRead(id)
     if (link) navigate(link)
-  }
-
-  const markAllRead = async () => {
-    await api('/api/notifications/read-all', { method: 'PATCH' })
-    load()
   }
 
   const deleteNotif = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation()
-    await api(`/api/notifications/${id}`, { method: 'DELETE' })
-    load()
+    await deleteNotification(id)
   }
 
   return (
@@ -3276,7 +3146,7 @@ function NotificationsPage() {
         title="Notifications"
         description="Updates on your trips, applications, and reviews."
         action={
-          <button className="outline-btn" onClick={markAllRead}>Mark all as read</button>
+          <button className="outline-btn" onClick={markAllAsRead}>Mark all as read</button>
         }
       />
 
@@ -3526,10 +3396,11 @@ function SettingsPage() {
 // TOUR PLANNER WORKSPACE (/planner/*)
 // -------------------------------------------------------------
 function RoleGuard({ role, children }: { role: PlatformRole; children: React.ReactNode }) {
-  if (!localStorage.getItem('porikroma-auth')) return <Navigate to="/login" replace />
-  const currentRole = localStorage.getItem('porikroma-role')
+  const { isAuthenticated, role: currentRole, isLoading } = useAuth()
+  if (isLoading) return null
+  if (!isAuthenticated) return <Navigate to="/login" replace />
   if (currentRole !== role && currentRole !== 'ADMIN') {
-    return <Navigate to={currentRole === 'ADMIN' ? '/admin/dashboard' : currentRole === 'TOUR_PLANNER' ? '/planner/dashboard' : '/dashboard'} replace />
+    return <Navigate to={currentRole === 'TOUR_PLANNER' ? '/planner/dashboard' : '/dashboard'} replace />
   }
   return <>{children}</>
 }
@@ -4292,7 +4163,9 @@ function AdminReports() {
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
+      <AuthProvider>
+        <NotificationsProvider>
+          <Routes>
         {/* Public Routes */}
         <Route path="/" element={<PublicLanding />} />
         <Route path="/login" element={<AuthPage mode="login" />} />
@@ -4387,6 +4260,8 @@ function App() {
         {/* 404 Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+        </NotificationsProvider>
+      </AuthProvider>
     </BrowserRouter>
   )
 }
