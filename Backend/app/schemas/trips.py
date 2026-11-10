@@ -77,5 +77,8 @@ class TripMemberAddRequest(BaseModel):
 
 
 class TripPhotoCreateRequest(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     url: str
     caption: str = ""
+    taken_at: Optional[str] = Field(default=None, alias="takenAt")

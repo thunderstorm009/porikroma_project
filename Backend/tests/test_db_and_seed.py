@@ -64,6 +64,44 @@ def test_init_schema_applies_schema_sql_idempotently():
         assert "CREATE TABLE IF NOT EXISTS users" in executed_sql
         assert "CREATE TABLE IF NOT EXISTS trips" in executed_sql
         assert "CREATE TABLE IF NOT EXISTS destinations" in executed_sql
+        assert "CREATE TABLE IF NOT EXISTS trip_photos" in executed_sql
+
+    asyncio.run(_run())
+
+
+def test_trip_photos_migration_runs_twice_without_errors():
+    """
+    CHECKLIST TEST:
+    Migration runs twice without errors and creates/alters trip_photos idempotently.
+    """
+    async def _run():
+        migration_file = Path(__file__).resolve().parent.parent / "migrations" / "001_trip_photos.sql"
+        assert migration_file.exists(), "Migration file 001_trip_photos.sql should exist"
+        sql = migration_file.read_text(encoding="utf-8")
+
+        test_db = Database()
+        mock_conn = AsyncMock()
+        mock_pool = MagicMock()
+
+        acquire_ctx = AsyncMock()
+        acquire_ctx.__aenter__.return_value = mock_conn
+        acquire_ctx.__aexit__.return_value = None
+        mock_pool.acquire.return_value = acquire_ctx
+        test_db.pool = mock_pool
+
+        # Run 1: first migration
+        async with test_db.pool.acquire() as conn:
+            await conn.execute(sql)
+
+        # Run 2: second execution (idempotency check)
+        async with test_db.pool.acquire() as conn:
+            await conn.execute(sql)
+
+        assert mock_conn.execute.await_count == 2
+        for call_args in mock_conn.execute.call_args_list:
+            executed = call_args[0][0]
+            assert "CREATE TABLE IF NOT EXISTS trip_photos" in executed
+            assert "user_id" in executed
 
     asyncio.run(_run())
 

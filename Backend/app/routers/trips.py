@@ -739,21 +739,31 @@ async def list_trip_photos(
     current_user: dict = Depends(get_current_user),
     db: Database = Depends(get_db),
 ):
-    """List photos uploaded to a trip."""
+    """List photos uploaded to a trip (scoped to trip members only)."""
     try:
         t_uuid = uuid.UUID(id)
     except (ValueError, TypeError):
         return JSONResponse(status_code=404, content={"error": "Trip not found"})
 
-    allowed, err_msg, _ = await check_trip_read_access(
-        current_user["id"], t_uuid, current_user.get("role", "TRAVELER"), db
-    )
-    if not allowed:
-        status_code = status.HTTP_404_NOT_FOUND if err_msg == "Trip not found" else status.HTTP_403_FORBIDDEN
-        return JSONResponse(status_code=status_code, content={"error": err_msg})
+    trip = await db.fetchrow("SELECT id, creator_id FROM trips WHERE id = $1", t_uuid)
+    if not trip:
+        return JSONResponse(status_code=404, content={"error": "Trip not found"})
+
+    if not await check_trip_access(current_user["id"], t_uuid, db) and current_user.get("role") != "ADMIN":
+        return JSONResponse(
+            status_code=status.HTTP_403_FORBIDDEN,
+            content={"error": "Trip membership required to view photos"},
+        )
 
     rows = await db.fetch(
-        "SELECT * FROM trip_photos WHERE trip_id = $1 ORDER BY created_at DESC",
+        """
+        SELECT tp.*, coalesce(tp.user_id, tp.uploaded_by) AS user_id,
+          u.name AS user_name, u.email AS user_email
+        FROM trip_photos tp
+        LEFT JOIN users u ON u.id = coalesce(tp.user_id, tp.uploaded_by)
+        WHERE tp.trip_id = $1
+        ORDER BY tp.created_at DESC
+        """,
         t_uuid,
     )
     return [record_to_dict(r) for r in rows]
@@ -766,25 +776,36 @@ async def upload_trip_photo(
     current_user: dict = Depends(get_current_user),
     db: Database = Depends(get_db),
 ):
-    """Upload a photo link to the trip."""
+    """Add a photo URL to the trip (scoped to trip members only)."""
     try:
         t_uuid = uuid.UUID(id)
         u_uuid = uuid.UUID(str(current_user["id"]))
     except (ValueError, TypeError):
         return JSONResponse(status_code=404, content={"error": "Trip not found"})
 
-    if not await check_trip_access(current_user["id"], t_uuid, db):
+    trip = await db.fetchrow("SELECT id, creator_id FROM trips WHERE id = $1", t_uuid)
+    if not trip:
+        return JSONResponse(status_code=404, content={"error": "Trip not found"})
+
+    if not await check_trip_access(current_user["id"], t_uuid, db) and current_user.get("role") != "ADMIN":
         return JSONResponse(
             status_code=status.HTTP_403_FORBIDDEN,
-            content={"error": "Trip membership required"},
+            content={"error": "Trip membership required to add photos"},
         )
 
+    taken_at_dt = None
+    if getattr(data, "taken_at", None):
+        try:
+            taken_at_dt = datetime.fromisoformat(str(data.taken_at).replace("Z", "+00:00"))
+        except Exception:
+            taken_at_dt = None
+
     query = """
-        INSERT INTO trip_photos (trip_id, uploaded_by, url, caption)
-        VALUES ($1, $2, $3, $4)
+        INSERT INTO trip_photos (trip_id, user_id, url, caption, taken_at)
+        VALUES ($1, $2, $3, $4, coalesce($5, now()))
         RETURNING *
     """
-    row = await db.fetchrow(query, t_uuid, u_uuid, data.url, data.caption)
+    row = await db.fetchrow(query, t_uuid, u_uuid, data.url, data.caption or "", taken_at_dt)
     return JSONResponse(
         status_code=status.HTTP_201_CREATED,
         content=record_to_dict(row),
@@ -798,17 +819,40 @@ async def delete_trip_photo(
     current_user: dict = Depends(get_current_user),
     db: Database = Depends(get_db),
 ):
-    """Delete a photo from the trip."""
+    """Delete a photo from the trip (owner of the photo or trip organizer only)."""
     try:
         t_uuid = uuid.UUID(id)
         p_uuid = uuid.UUID(photo_id)
+        u_uuid = uuid.UUID(str(current_user["id"]))
     except (ValueError, TypeError):
         return JSONResponse(status_code=404, content={"error": "Photo not found"})
 
-    if not await check_trip_access(current_user["id"], t_uuid, db):
+    trip = await db.fetchrow("SELECT id, creator_id FROM trips WHERE id = $1", t_uuid)
+    if not trip:
+        return JSONResponse(status_code=404, content={"error": "Trip not found"})
+
+    if not await check_trip_access(current_user["id"], t_uuid, db) and current_user.get("role") != "ADMIN":
         return JSONResponse(
             status_code=status.HTTP_403_FORBIDDEN,
             content={"error": "Trip membership required"},
+        )
+
+    photo = await db.fetchrow(
+        "SELECT id, trip_id, coalesce(user_id, uploaded_by) AS user_id FROM trip_photos WHERE id = $1 AND trip_id = $2",
+        p_uuid,
+        t_uuid,
+    )
+    if not photo:
+        return JSONResponse(status_code=404, content={"error": "Photo not found"})
+
+    is_photo_owner = str(photo.get("user_id")) == str(u_uuid)
+    is_trip_organizer = str(trip.get("creator_id")) == str(u_uuid)
+    is_admin = current_user.get("role") == "ADMIN"
+
+    if not (is_photo_owner or is_trip_organizer or is_admin):
+        return JSONResponse(
+            status_code=status.HTTP_403_FORBIDDEN,
+            content={"error": "Only the photo owner or trip organizer can delete this photo"},
         )
 
     await db.execute(

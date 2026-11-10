@@ -1,5 +1,5 @@
 import { api } from './client'
-import type { Trip, WorkspaceData } from '../types'
+import type { Trip, WorkspaceData, TripPhoto } from '../types'
 
 export const tripsApi = {
   getTrips: () => api<Trip[]>('/api/trips'),
@@ -79,4 +79,17 @@ export const tripsApi = {
 
   removeMember: (tripId: string, userId: string) =>
     api(`/api/trips/${tripId}/members/${userId}`, { method: 'DELETE' }),
+
+  // Photos
+  getPhotos: (tripId: string) =>
+    api<TripPhoto[]>(`/api/trips/${tripId}/photos`),
+
+  addPhoto: (tripId: string, photo: { url: string; caption?: string; takenAt?: string }) =>
+    api<TripPhoto>(`/api/trips/${tripId}/photos`, {
+      method: 'POST',
+      body: JSON.stringify(photo),
+    }),
+
+  deletePhoto: (tripId: string, photoId: string) =>
+    api<{ success: boolean }>(`/api/trips/${tripId}/photos/${photoId}`, { method: 'DELETE' }),
 }

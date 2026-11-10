@@ -568,3 +568,134 @@ def test_admin_can_access_private_trip(client: TestClient):
         assert res.status_code == 200
         assert res.json()["id"] == str(priv_id)
 
+
+# ---------------------------------------------------------------------------
+# 11. TRIP PHOTOS & PERMISSIONS
+# ---------------------------------------------------------------------------
+def test_trip_photos_member_can_view_and_add(client: TestClient):
+    """Trip members can view and add photos to the trip gallery."""
+    auth_header = make_auth_header(USER_1_ID, "traveler1@test.com", "TRAVELER")
+    photo_row = {
+        "id": ITEM_ID,
+        "trip_id": TRIP_ID,
+        "user_id": USER_1_ID,
+        "url": "https://images.unsplash.com/photo-test",
+        "caption": "Tea gardens at dawn",
+        "taken_at": "2025-06-12T08:00:00Z",
+        "created_at": "2025-06-12T08:30:00Z",
+        "user_name": "Traveler One",
+    }
+
+    # 1. View photos
+    with patch.object(db, "fetchrow", new_callable=AsyncMock) as mock_fetchrow, \
+         patch.object(db, "fetch", new_callable=AsyncMock) as mock_fetch:
+        # fetchrow for user, trip, access check
+        mock_fetchrow.side_effect = [MOCK_USER_1, {"id": TRIP_ID, "creator_id": USER_1_ID}, {"exists": 1}]
+        mock_fetch.return_value = [photo_row]
+
+        res = client.get(f"/api/trips/{TRIP_ID}/photos", headers=auth_header)
+        assert res.status_code == 200
+        data = res.json()
+        assert len(data) == 1
+        assert data[0]["url"] == "https://images.unsplash.com/photo-test"
+
+    # 2. Add photo
+    with patch.object(db, "fetchrow", new_callable=AsyncMock) as mock_fetchrow:
+        mock_fetchrow.side_effect = [
+            MOCK_USER_1,
+            {"id": TRIP_ID, "creator_id": USER_1_ID},
+            {"exists": 1},  # check_trip_access
+            photo_row,      # INSERT RETURNING *
+        ]
+
+        res_post = client.post(
+            f"/api/trips/{TRIP_ID}/photos",
+            json={"url": "https://images.unsplash.com/photo-test", "caption": "Tea gardens at dawn"},
+            headers=auth_header,
+        )
+        assert res_post.status_code == 201
+        assert res_post.json()["caption"] == "Tea gardens at dawn"
+
+
+def test_trip_photos_non_member_forbidden(client: TestClient):
+    """Non-members cannot view or add photos to a trip."""
+    non_member_auth = make_auth_header(USER_2_ID, "traveler2@test.com", "TRAVELER")
+
+    # 1. Attempt to view photos -> 403
+    with patch.object(db, "fetchrow", new_callable=AsyncMock) as mock_fetchrow:
+        mock_fetchrow.side_effect = [
+            MOCK_USER_2,
+            {"id": TRIP_ID, "creator_id": USER_1_ID},
+            None,  # check_trip_access -> False
+        ]
+        res = client.get(f"/api/trips/{TRIP_ID}/photos", headers=non_member_auth)
+        assert res.status_code == 403
+        assert "membership required" in res.json()["error"].lower()
+
+    # 2. Attempt to add photo -> 403
+    with patch.object(db, "fetchrow", new_callable=AsyncMock) as mock_fetchrow:
+        mock_fetchrow.side_effect = [
+            MOCK_USER_2,
+            {"id": TRIP_ID, "creator_id": USER_1_ID},
+            None,  # check_trip_access -> False
+        ]
+        res_post = client.post(
+            f"/api/trips/{TRIP_ID}/photos",
+            json={"url": "https://img.com/intruder.jpg"},
+            headers=non_member_auth,
+        )
+        assert res_post.status_code == 403
+        assert "membership required" in res_post.json()["error"].lower()
+
+
+def test_trip_photos_delete_permission_enforcement(client: TestClient):
+    """
+    CHECKLIST TEST:
+    Only the photo owner or trip organizer can delete a photo. Non-owners/non-organizers cannot.
+    """
+    OTHER_USER_ID = uuid.UUID("99999999-9999-9999-9999-999999999999")
+    organizer_auth = make_auth_header(USER_1_ID, "organizer@test.com", "TRAVELER")
+    photo_owner_auth = make_auth_header(USER_2_ID, "owner@test.com", "TRAVELER")
+    other_member_auth = make_auth_header(OTHER_USER_ID, "other@test.com", "TRAVELER")
+
+    trip_record = {"id": TRIP_ID, "creator_id": USER_1_ID}
+    photo_record = {"id": ITEM_ID, "trip_id": TRIP_ID, "user_id": USER_2_ID}
+
+    # 1. Unrelated member attempts delete -> 403 Forbidden
+    with patch.object(db, "fetchrow", new_callable=AsyncMock) as mock_fetchrow:
+        mock_fetchrow.side_effect = [
+            {"id": OTHER_USER_ID, "email": "other@test.com", "role": "TRAVELER"},
+            trip_record,
+            {"exists": 1},  # check_trip_access -> member
+            photo_record,   # photo found
+        ]
+        res = client.delete(f"/api/trips/{TRIP_ID}/photos/{ITEM_ID}", headers=other_member_auth)
+        assert res.status_code == 403
+        assert "photo owner or trip organizer" in res.json()["error"].lower()
+
+    # 2. Photo owner deletes -> 200 OK
+    with patch.object(db, "fetchrow", new_callable=AsyncMock) as mock_fetchrow, \
+         patch.object(db, "execute", new_callable=AsyncMock) as mock_exec:
+        mock_fetchrow.side_effect = [
+            MOCK_USER_2,
+            trip_record,
+            {"exists": 1},  # check_trip_access -> member
+            photo_record,   # photo found with user_id == USER_2_ID
+        ]
+        res_owner = client.delete(f"/api/trips/{TRIP_ID}/photos/{ITEM_ID}", headers=photo_owner_auth)
+        assert res_owner.status_code == 200
+        assert res_owner.json() == {"success": True}
+
+    # 3. Trip organizer deletes -> 200 OK
+    with patch.object(db, "fetchrow", new_callable=AsyncMock) as mock_fetchrow, \
+         patch.object(db, "execute", new_callable=AsyncMock) as mock_exec:
+        mock_fetchrow.side_effect = [
+            MOCK_USER_1,
+            trip_record,    # creator_id == USER_1_ID
+            {"exists": 1},  # check_trip_access -> member
+            photo_record,   # photo found with user_id == USER_2_ID
+        ]
+        res_org = client.delete(f"/api/trips/{TRIP_ID}/photos/{ITEM_ID}", headers=organizer_auth)
+        assert res_org.status_code == 200
+        assert res_org.json() == {"success": True}
+

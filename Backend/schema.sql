@@ -256,12 +256,28 @@ CREATE TABLE IF NOT EXISTS trip_notes (
 CREATE TABLE IF NOT EXISTS trip_photos (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   trip_id uuid NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
-  uploaded_by uuid NOT NULL REFERENCES users(id),
+  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   url text NOT NULL,
   caption text NOT NULL DEFAULT '',
-  visibility text NOT NULL DEFAULT 'TRIP_MEMBERS_ONLY' CHECK (visibility IN ('PUBLIC', 'TRIP_MEMBERS_ONLY', 'PRIVATE')),
+  taken_at timestamptz NOT NULL DEFAULT now(),
   created_at timestamptz NOT NULL DEFAULT now()
 );
+
+-- Idempotent column check/upgrade for trip_photos
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'trip_photos' AND column_name = 'user_id') THEN
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'trip_photos' AND column_name = 'uploaded_by') THEN
+      ALTER TABLE trip_photos RENAME COLUMN uploaded_by TO user_id;
+    ELSE
+      ALTER TABLE trip_photos ADD COLUMN user_id uuid REFERENCES users(id) ON DELETE CASCADE;
+    END IF;
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'trip_photos' AND column_name = 'taken_at') THEN
+    ALTER TABLE trip_photos ADD COLUMN taken_at timestamptz NOT NULL DEFAULT now();
+  END IF;
+END $$;
 
 CREATE TABLE IF NOT EXISTS trip_map_places (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

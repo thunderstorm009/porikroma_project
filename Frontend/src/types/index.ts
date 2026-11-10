@@ -72,12 +72,25 @@ export interface NotificationItem {
   created_at: string
 }
 
+export interface TripPhoto {
+  id: string
+  trip_id: string
+  user_id: string
+  uploaded_by?: string
+  user_name?: string
+  user_email?: string
+  url: string
+  caption: string
+  taken_at?: string
+  created_at: string
+}
+
 export interface WorkspaceData {
   trip: Trip
   itinerary: { id: string; day_date: string; title: string; location?: string; notes?: string; sort_order: number }[]
   checklist: { id: string; title: string; completed: boolean }[]
   notes: { id: string; body: string; author_name?: string; created_at: string }[]
-  photos: { id: string; url: string; caption?: string }[]
+  photos: TripPhoto[]
   members: { id: string; name: string; email: string; role: string }[]
   expenses: { id: string; title: string; category: string; amount: number; expense_date: string; paid_by_name: string }[]
   mapPlaces: { id: string; name: string; category: string; notes?: string }[]

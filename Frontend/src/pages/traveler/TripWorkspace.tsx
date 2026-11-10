@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { MapPin, ArrowUpRight, Check, ChevronRight, DollarSign, MessageCircle, Sparkles } from 'lucide-react'
+import { MapPin, ArrowUpRight, Check, ChevronRight, DollarSign, MessageCircle, Sparkles, Camera } from 'lucide-react'
 import { api } from '../../api'
 import type { WorkspaceData } from '../../types'
 import { PageHeader } from '../../components/common/PageHeader'
@@ -8,6 +8,7 @@ import { ItineraryTab } from '../../components/workspace/ItineraryTab'
 import { ExpensesTab } from '../../components/workspace/ExpensesTab'
 import { NotesTab } from '../../components/workspace/NotesTab'
 import { JournalTab } from '../../components/workspace/JournalTab'
+import { PhotosTab } from '../../components/workspace/PhotosTab'
 import { MapTab } from '../../components/workspace/MapTab'
 import { ChecklistTab } from '../../components/workspace/ChecklistTab'
 import { SettingsTab } from '../../components/workspace/SettingsTab'
@@ -36,9 +37,9 @@ export function TripWorkspace() {
 
   useEffect(() => { loadWorkspace() }, [tripId])
 
-  const tabs = ['overview', 'itinerary', 'expenses', 'notes', 'journal', 'map', 'checklist', 'settings']
+  const tabs = ['overview', 'itinerary', 'expenses', 'notes', 'journal', 'photos', 'map', 'checklist', 'settings']
   if (data?.group || (data?.members && data.members.length > 1)) {
-    tabs.splice(7, 0, 'chat', 'members')
+    tabs.splice(8, 0, 'chat', 'members')
   }
 
   if (loading) return <div className="page"><p className="muted">Loading trip workspace…</p></div>
@@ -137,6 +138,9 @@ export function TripWorkspace() {
               <button onClick={() => navigate(`/trips/${tripId}/journal`)}>
                 <span><Sparkles size={17} /></span> Add a memory <ArrowUpRight size={14} />
               </button>
+              <button onClick={() => navigate(`/trips/${tripId}/photos`)}>
+                <span><Camera size={17} /></span> Trip photos <ArrowUpRight size={14} />
+              </button>
               <button onClick={() => navigate(`/trips/${tripId}/checklist`)}>
                 <span><Check size={17} /></span> Packing checklist <ArrowUpRight size={14} />
               </button>
@@ -165,7 +169,12 @@ export function TripWorkspace() {
         <JournalTab tripId={tripId} notes={notes} onRefresh={loadWorkspace} />
       )}
 
-      {/* Tab 6: Map */}
+      {/* Tab 6: Photos */}
+      {currentTab === 'photos' && (
+        <PhotosTab tripId={tripId} trip={trip} members={members} onRefresh={loadWorkspace} />
+      )}
+
+      {/* Tab 7: Map */}
       {currentTab === 'map' && (
         <MapTab tripId={tripId} destinationName={trip.destination_name || ''} places={mapPlaces} onRefresh={loadWorkspace} />
       )}
