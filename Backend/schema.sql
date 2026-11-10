@@ -108,6 +108,18 @@ CREATE TABLE IF NOT EXISTS traveler_reviews (
   UNIQUE (trip_id, reviewer_id, reviewed_user_id)
 );
 
+CREATE TABLE IF NOT EXISTS peer_reviews (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  trip_id uuid NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
+  reviewer_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  reviewee_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  rating integer NOT NULL CHECK (rating BETWEEN 1 AND 5),
+  comment text NOT NULL DEFAULT '',
+  created_at timestamptz NOT NULL DEFAULT now(),
+  CHECK (reviewer_id <> reviewee_id),
+  UNIQUE (trip_id, reviewer_id, reviewee_id)
+);
+
 CREATE TABLE IF NOT EXISTS notifications (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,

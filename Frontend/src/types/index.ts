@@ -165,3 +165,31 @@ export interface Settlement {
   settled_at?: string
   created_at?: string
 }
+
+export interface PeerReview {
+  id: string
+  trip_id: string
+  trip_name?: string
+  reviewer_id: string
+  reviewer_name?: string
+  reviewer_avatar?: string
+  reviewee_id: string
+  rating: number
+  comment: string
+  created_at: string
+}
+
+export interface PeerReviewsResponse {
+  reviews: PeerReview[]
+  average_rating: number | null
+  count: number
+  privacy: 'PUBLIC' | 'PRIVATE'
+}
+
+export interface PendingReviewCompanion {
+  id: string
+  name: string
+  email: string
+  avatar_url?: string
+}
+

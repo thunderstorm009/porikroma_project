@@ -10,4 +10,5 @@ export * from './community'
 export * from './notifications'
 export * from './footprint'
 export * from './tours'
+export * from './reviews'
 

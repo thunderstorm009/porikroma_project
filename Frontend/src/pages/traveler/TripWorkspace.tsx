@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { MapPin, ArrowUpRight, Check, ChevronRight, DollarSign, MessageCircle, Sparkles, Camera } from 'lucide-react'
-import { api } from '../../api'
-import type { WorkspaceData } from '../../types'
+import { MapPin, ArrowUpRight, Check, ChevronRight, DollarSign, MessageCircle, Sparkles, Camera, Star, X } from 'lucide-react'
+import { api, getPendingPeerReviews, createPeerReview } from '../../api'
+import type { WorkspaceData, PendingReviewCompanion } from '../../types'
 import { PageHeader } from '../../components/common/PageHeader'
 import { ItineraryTab } from '../../components/workspace/ItineraryTab'
 import { ExpensesTab } from '../../components/workspace/ExpensesTab'
@@ -22,6 +22,13 @@ export function TripWorkspace() {
   const [data, setData] = useState<WorkspaceData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [pendingCompanions, setPendingCompanions] = useState<PendingReviewCompanion[]>([])
+  const [reviewingCompanion, setReviewingCompanion] = useState<PendingReviewCompanion | null>(null)
+  const [rating, setRating] = useState(5)
+  const [comment, setComment] = useState('')
+  const [submittingReview, setSubmittingReview] = useState(false)
+  const [reviewError, setReviewError] = useState('')
+  const [reviewSuccess, setReviewSuccess] = useState('')
 
   // Current tab from URL or default to overview
   const pathParts = location.pathname.split('/')
@@ -30,12 +37,50 @@ export function TripWorkspace() {
   const loadWorkspace = () => {
     setLoading(true)
     api<WorkspaceData>(`/api/trips/${tripId}/workspace`)
-      .then(setData)
+      .then((res) => {
+        setData(res)
+        if (res.trip.status === 'COMPLETED') {
+          getPendingPeerReviews(tripId)
+            .then(setPendingCompanions)
+            .catch(() => {})
+        }
+      })
       .catch((err) => setError(err instanceof Error ? err.message : 'Unable to load trip workspace'))
       .finally(() => setLoading(false))
   }
 
   useEffect(() => { loadWorkspace() }, [tripId])
+
+  const handleOpenReviewModal = (companion: PendingReviewCompanion) => {
+    setReviewingCompanion(companion)
+    setRating(5)
+    setComment('')
+    setReviewError('')
+  }
+
+  const handleSubmitReview = async () => {
+    if (!reviewingCompanion) return
+    setSubmittingReview(true)
+    setReviewError('')
+    try {
+      await createPeerReview({
+        tripId,
+        revieweeId: reviewingCompanion.id,
+        rating,
+        comment,
+      })
+      setPendingCompanions((prev) => prev.filter((c) => c.id !== reviewingCompanion.id))
+      setReviewingCompanion(null)
+      setComment('')
+      setRating(5)
+      setReviewSuccess(`Review submitted for ${reviewingCompanion.name}!`)
+      setTimeout(() => setReviewSuccess(''), 4000)
+    } catch (err: any) {
+      setReviewError(err?.message || 'Failed to submit review')
+    } finally {
+      setSubmittingReview(false)
+    }
+  }
 
   const tabs = ['overview', 'itinerary', 'expenses', 'notes', 'journal', 'photos', 'map', 'checklist', 'settings']
   if (data?.group || (data?.members && data.members.length > 1)) {
@@ -83,6 +128,69 @@ export function TripWorkspace() {
       {/* Tab 1: Overview */}
       {currentTab === 'overview' && (
         <div className="workspace-grid">
+          {reviewSuccess && (
+            <div className="panel workspace-wide" style={{ background: '#ecfdf5', color: '#065f46', border: '1px solid #a7f3d0', padding: '12px 16px', borderRadius: '8px' }}>
+              ✓ {reviewSuccess}
+            </div>
+          )}
+
+          {/* Review travel mates prompt on completed trips */}
+          {trip.status === 'COMPLETED' && (
+            <div className="panel workspace-wide" style={{ borderLeft: '4px solid #f59e0b', background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.06), rgba(46, 125, 85, 0.04))' }}>
+              <div className="panel-heading">
+                <div>
+                  <span className="badge badge-green" style={{ marginBottom: '6px' }}>Trip Completed</span>
+                  <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '4px 0' }}>
+                    <Star size={20} color="#f59e0b" fill="#f59e0b" /> Review travel mates
+                  </h2>
+                  <p>
+                    {pendingCompanions.length > 0
+                      ? `You have ${pendingCompanions.length} fellow ${pendingCompanions.length === 1 ? 'traveler' : 'travelers'} to review from this expedition. Rate their teamwork, punctuality, and help build community trust.`
+                      : 'All travel companions for this expedition have been reviewed. Thank you for strengthening the Porikroma community!'}
+                  </p>
+                </div>
+              </div>
+
+              {pendingCompanions.length > 0 && (
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginTop: '14px' }}>
+                  {pendingCompanions.map((comp) => (
+                    <div
+                      key={comp.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        padding: '12px 16px',
+                        background: 'white',
+                        borderRadius: '10px',
+                        border: '1px solid var(--line, #e2e8f0)',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                        minWidth: '260px',
+                      }}
+                    >
+                      <div className="avatar" style={{ width: '38px', height: '38px', fontSize: '14px' }}>
+                        {comp.name ? comp.name[0].toUpperCase() : 'T'}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <strong style={{ display: 'block', fontSize: '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {comp.name}
+                        </strong>
+                        <small style={{ color: '#718096', fontSize: '11px', display: 'block' }}>{comp.email}</small>
+                      </div>
+                      <button
+                        className="primary-btn"
+                        style={{ height: '32px', padding: '0 12px', fontSize: '12px', gap: '5px' }}
+                        onClick={() => handleOpenReviewModal(comp)}
+                      >
+                        Review <Star size={12} fill="white" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="panel">
             <div className="panel-heading">
               <div>
@@ -144,6 +252,11 @@ export function TripWorkspace() {
               <button onClick={() => navigate(`/trips/${tripId}/checklist`)}>
                 <span><Check size={17} /></span> Packing checklist <ArrowUpRight size={14} />
               </button>
+              {trip.status === 'COMPLETED' && pendingCompanions.length > 0 && (
+                <button onClick={() => handleOpenReviewModal(pendingCompanions[0])}>
+                  <span><Star size={17} color="#f59e0b" fill="#f59e0b" /></span> Review travel mates <ArrowUpRight size={14} />
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -197,6 +310,98 @@ export function TripWorkspace() {
       {/* Optional Group Members Tab */}
       {currentTab === 'members' && (
         <MembersTab tripId={tripId} members={members} onRefresh={loadWorkspace} />
+      )}
+
+      {/* Review Travel Mate Modal */}
+      {reviewingCompanion && (
+        <div className="modal-backdrop" onClick={() => !submittingReview && setReviewingCompanion(null)}>
+          <div className="modal" style={{ maxWidth: '480px' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div className="avatar" style={{ width: '32px', height: '32px', fontSize: '13px' }}>
+                  {reviewingCompanion.name ? reviewingCompanion.name[0].toUpperCase() : 'T'}
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '16px' }}>Review {reviewingCompanion.name}</h3>
+                  <small style={{ color: '#64748b' }}>Expedition companion</small>
+                </div>
+              </div>
+              <button
+                className="icon-btn"
+                onClick={() => setReviewingCompanion(null)}
+                disabled={submittingReview}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <p style={{ color: '#475569', fontSize: '12px', margin: '0 0 16px' }}>
+              Rate your travel experience together on <strong>{trip.name}</strong>. Your honest review helps travelers find great companions.
+            </p>
+
+            {reviewError && (
+              <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '10px 14px', borderRadius: '6px', fontSize: '12px', marginBottom: '14px' }}>
+                {reviewError}
+              </div>
+            )}
+
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontWeight: 600, fontSize: '12px', marginBottom: '8px' }}>
+                Rating: {rating} of 5 stars
+              </label>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setRating(star)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}
+                    title={`${star} star${star > 1 ? 's' : ''}`}
+                  >
+                    <Star
+                      size={28}
+                      color="#f59e0b"
+                      fill={star <= rating ? '#f59e0b' : 'none'}
+                    />
+                  </button>
+                ))}
+                <span style={{ fontSize: '12px', fontWeight: 600, color: '#f59e0b', marginLeft: '6px' }}>
+                  {rating === 5 ? 'Exceptional mate' : rating === 4 ? 'Very good' : rating === 3 ? 'Good' : rating === 2 ? 'Needs improvement' : 'Challenging'}
+                </span>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '18px' }}>
+              <label style={{ display: 'block', fontWeight: 600, fontSize: '12px', marginBottom: '6px' }}>
+                Comment & Feedback
+              </label>
+              <textarea
+                rows={4}
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder="Mention teamwork, punctuality, communication, or favorite shared moments..."
+                style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--line, #cbd5e1)', fontSize: '13px', boxSizing: 'border-box' }}
+              />
+            </div>
+
+            <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <button
+                className="secondary-btn"
+                onClick={() => setReviewingCompanion(null)}
+                disabled={submittingReview}
+              >
+                Cancel
+              </button>
+              <button
+                className="primary-btn"
+                onClick={handleSubmitReview}
+                disabled={submittingReview}
+              >
+                {submittingReview ? 'Submitting…' : 'Submit Review'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

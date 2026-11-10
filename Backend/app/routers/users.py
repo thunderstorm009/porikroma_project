@@ -1,5 +1,7 @@
 import uuid
-from fastapi import APIRouter, Depends
+from typing import Optional
+from fastapi import APIRouter, Depends, status
+from fastapi.responses import JSONResponse
 from app.db import Database, get_db
 from app.deps import get_current_user
 from app.schemas.users import (
@@ -9,6 +11,7 @@ from app.schemas.users import (
 from app.serializers import record_to_dict
 
 router = APIRouter(prefix="/api/me", tags=["Current User & Profile"])
+users_router = APIRouter(prefix="/api/users", tags=["Users"])
 
 
 @router.get("")
@@ -41,8 +44,16 @@ async def get_my_profile(
           coalesce(p.travel_style, 'Slow explorer') AS travel_style,
           coalesce(p.interests, '{}') AS interests,
           (SELECT count(*)::int FROM trips WHERE creator_id = u.id) AS trips_count,
-          (SELECT count(*)::int FROM traveler_reviews WHERE reviewed_user_id = u.id) AS review_count,
-          (SELECT coalesce(round(avg(overall), 1), 5.0) FROM traveler_reviews WHERE reviewed_user_id = u.id) AS rating
+          (SELECT coalesce(
+            nullif((SELECT count(*)::int FROM peer_reviews WHERE reviewee_id = u.id), 0),
+            (SELECT count(*)::int FROM traveler_reviews WHERE reviewed_user_id = u.id),
+            0
+          )) AS review_count,
+          (SELECT coalesce(
+            (SELECT round(avg(rating), 1) FROM peer_reviews WHERE reviewee_id = u.id),
+            (SELECT round(avg(overall), 1) FROM traveler_reviews WHERE reviewed_user_id = u.id),
+            5.0
+          )) AS rating
         FROM users u
         LEFT JOIN user_profiles p ON p.user_id = u.id
         WHERE u.id = $1
@@ -50,6 +61,76 @@ async def get_my_profile(
         user_uuid,
     )
     return record_to_dict(row)
+
+
+@users_router.get("/{id}/profile")
+async def get_user_profile(
+    id: str,
+    current_user: dict = Depends(get_current_user),
+    db: Database = Depends(get_db),
+):
+    """Get another user's profile respecting privacy settings."""
+    if id == "me" or str(id) == str(current_user["id"]):
+        return await get_my_profile(current_user=current_user, db=db)
+
+    try:
+        target_uuid = uuid.UUID(id)
+    except (ValueError, TypeError):
+        return JSONResponse(status_code=404, content={"error": "User not found"})
+
+    is_admin = current_user.get("role") == "ADMIN"
+    privacy = await db.fetchrow(
+        "SELECT profile_visibility, reviews_visibility FROM user_privacy_settings WHERE user_id = $1",
+        target_uuid,
+    )
+    profile_vis = privacy["profile_visibility"] if privacy and "profile_visibility" in privacy else "PUBLIC"
+
+    row = await db.fetchrow(
+        """
+        SELECT u.id, u.name, u.email, u.role, u.created_at,
+          coalesce(p.username, lower(replace(u.name, ' ', '-'))) AS username,
+          coalesce(p.bio, '') AS bio,
+          p.avatar_url,
+          coalesce(p.travel_style, 'Slow explorer') AS travel_style,
+          coalesce(p.interests, '{}') AS interests,
+          (SELECT count(*)::int FROM trips WHERE creator_id = u.id) AS trips_count,
+          (SELECT coalesce(
+            nullif((SELECT count(*)::int FROM peer_reviews WHERE reviewee_id = u.id), 0),
+            (SELECT count(*)::int FROM traveler_reviews WHERE reviewed_user_id = u.id),
+            0
+          )) AS review_count,
+          (SELECT coalesce(
+            (SELECT round(avg(rating), 1) FROM peer_reviews WHERE reviewee_id = u.id),
+            (SELECT round(avg(overall), 1) FROM traveler_reviews WHERE reviewed_user_id = u.id),
+            5.0
+          )) AS rating
+        FROM users u
+        LEFT JOIN user_profiles p ON p.user_id = u.id
+        WHERE u.id = $1
+        """,
+        target_uuid,
+    )
+    if not row:
+        return JSONResponse(status_code=404, content={"error": "User not found"})
+
+    data = record_to_dict(row)
+    if not is_admin and profile_vis == "PRIVATE":
+        return {
+            "id": str(target_uuid),
+            "name": row["name"],
+            "username": data.get("username"),
+            "avatar_url": data.get("avatar_url"),
+            "bio": "This profile is private.",
+            "travel_style": "",
+            "interests": [],
+            "trips_count": 0,
+            "review_count": 0,
+            "rating": 0.0,
+            "is_private": True,
+        }
+
+    data["is_private"] = False
+    return data
 
 
 @router.put("/profile")
