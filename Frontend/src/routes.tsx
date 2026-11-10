@@ -17,6 +17,7 @@ import { DestinationsPage } from './pages/traveler/DestinationsPage'
 import { DestinationDetails } from './pages/traveler/DestinationDetails'
 import { ToursPage } from './pages/traveler/ToursPage'
 import { TourDetailsPage } from './pages/traveler/TourDetailsPage'
+import { MyBookingsPage } from './pages/traveler/MyBookingsPage'
 import { GroupExplore } from './pages/traveler/GroupExplore'
 import { GroupDetailsPage } from './pages/traveler/GroupDetailsPage'
 import { MyGroupsPage } from './pages/traveler/MyGroupsPage'
@@ -92,6 +93,9 @@ export function AppRoutes() {
           <Route path="group-travel/preview" element={<GroupDetailsPage />} />
           <Route path="group-travel/:groupId" element={<GroupDetailsPage />} />
 
+          {/* Tour Bookings */}
+          <Route path="my-bookings" element={<MyBookingsPage />} />
+
           {/* AI Planner */}
           <Route path="ai-assistant" element={<PlannerPage />} />
 
@@ -131,6 +135,7 @@ export function AppRoutes() {
                 <Route path="tours" element={<PlannerToursList />} />
                 <Route path="tours/create" element={<CreateTourPage />} />
                 <Route path="tours/participants" element={<PlannerParticipants />} />
+                <Route path="bookings" element={<Navigate to="/planner/tours/participants" replace />} />
                 <Route path="schedules" element={<PlannerSchedules />} />
                 <Route path="*" element={<Navigate to="/planner/dashboard" replace />} />
               </Routes>

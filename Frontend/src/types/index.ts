@@ -123,13 +123,21 @@ export interface TourBooking {
   traveler_id: string
   traveler_name?: string
   traveler_email?: string
-  seats: number
-  total_price: number
-  status: 'PENDING' | 'CONFIRMED' | 'CANCELLED'
+  seats?: number
+  travelers_count?: number
+  price?: number
+  total_price?: number
+  status: 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED'
+  tour_id?: string
   tour_title?: string
   tour_price?: number
   start_date?: string
   end_date?: string
+  destination_name?: string
+  destination_image?: string
+  district?: string
+  division?: string
+  planner_name?: string
   created_at: string
 }
 

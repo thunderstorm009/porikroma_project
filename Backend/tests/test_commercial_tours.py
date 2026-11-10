@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 from unittest.mock import AsyncMock, patch
 import uuid
 import pytest
@@ -194,6 +194,44 @@ def test_booking_rejected_when_departure_cancelled(client: TestClient):
         assert res.status_code == 400
 
 
+def test_booking_rejected_duplicate_active(client: TestClient):
+    """Traveler cannot create a duplicate active booking for the same departure."""
+    departure_row = {
+        "id": DEP_ID,
+        "tour_id": TOUR_ID,
+        "start_date": date(2025, 6, 12),
+        "end_date": date(2025, 6, 15),
+        "capacity": 10,
+        "status": "OPEN",
+        "planner_id": PLANNER_ID,
+        "tour_title": "Sylhet Tea Country Expedition",
+    }
+    existing_booking = {
+        "id": BOOKING_ID,
+        "status": "PENDING",
+    }
+
+    with patch.object(db, "fetchrow", new_callable=AsyncMock) as mock_fetchrow:
+        def fetchrow_side_effect(query, *args):
+            if "FROM users" in query:
+                return MOCK_TRAVELER
+            if "FROM tour_departures" in query:
+                return departure_row
+            if "FROM bookings" in query and "traveler_id" in query:
+                return existing_booking
+            return None
+
+        mock_fetchrow.side_effect = fetchrow_side_effect
+
+        res = client.post(
+            f"/api/departures/{DEP_ID}/bookings",
+            json={"travelersCount": 1},
+            headers=TRAVELER_HEADERS,
+        )
+        assert res.status_code == 400
+        assert "already have an active booking" in res.json()["error"].lower()
+
+
 # ---------------------------------------------------------------------------
 # 2. PLANNER CONFIRMATION / CANCELLATION PERMISSIONS
 # ---------------------------------------------------------------------------
@@ -276,6 +314,77 @@ def test_only_owning_planner_can_confirm_or_cancel_bookings(client: TestClient):
         )
         assert res_cancel.status_code == 200
         assert res_cancel.json()["status"] == "CANCELLED"
+
+
+def test_traveler_can_cancel_own_booking_before_departure(client: TestClient):
+    """Travelers can cancel their own pending or confirmed booking before departure."""
+    future_date = date.today() + timedelta(days=5)
+    booking_row = {
+        "id": BOOKING_ID,
+        "departure_id": DEP_ID,
+        "traveler_id": TRAVELER_ID,
+        "travelers_count": 2,
+        "status": "CONFIRMED",
+        "capacity": 10,
+        "dep_id": DEP_ID,
+        "start_date": future_date,
+        "planner_id": PLANNER_ID,
+        "tour_title": "Sylhet Tea Country Expedition",
+    }
+
+    with patch.object(db, "fetchrow", new_callable=AsyncMock) as mock_fetchrow, \
+         patch.object(db, "execute", new_callable=AsyncMock) as mock_exec:
+        def side_effect(query, *args):
+            if "FROM users" in query:
+                return MOCK_TRAVELER
+            if "FROM bookings b" in query:
+                return booking_row
+            if "UPDATE bookings" in query:
+                return {**booking_row, "status": "CANCELLED"}
+            return None
+
+        mock_fetchrow.side_effect = side_effect
+        res = client.patch(
+            f"/api/bookings/{BOOKING_ID}/status",
+            json={"status": "CANCELLED"},
+            headers=TRAVELER_HEADERS,
+        )
+        assert res.status_code == 200
+        assert res.json()["status"] == "CANCELLED"
+
+
+def test_traveler_cannot_cancel_past_departure_booking(client: TestClient):
+    """Travelers cannot cancel bookings after departure has begun."""
+    past_date = date.today() - timedelta(days=2)
+    booking_row = {
+        "id": BOOKING_ID,
+        "departure_id": DEP_ID,
+        "traveler_id": TRAVELER_ID,
+        "travelers_count": 2,
+        "status": "CONFIRMED",
+        "capacity": 10,
+        "dep_id": DEP_ID,
+        "start_date": past_date,
+        "planner_id": PLANNER_ID,
+        "tour_title": "Sylhet Tea Country Expedition",
+    }
+
+    with patch.object(db, "fetchrow", new_callable=AsyncMock) as mock_fetchrow:
+        def side_effect(query, *args):
+            if "FROM users" in query:
+                return MOCK_TRAVELER
+            if "FROM bookings b" in query:
+                return booking_row
+            return None
+
+        mock_fetchrow.side_effect = side_effect
+        res = client.patch(
+            f"/api/bookings/{BOOKING_ID}/status",
+            json={"status": "CANCELLED"},
+            headers=TRAVELER_HEADERS,
+        )
+        assert res.status_code == 400
+        assert "past departure" in res.json()["error"].lower() or "begun" in res.json()["error"].lower()
 
 
 # ---------------------------------------------------------------------------

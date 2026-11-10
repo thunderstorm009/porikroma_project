@@ -1,5 +1,5 @@
 import { api } from './client'
-import type { Tour } from '../types'
+import type { Tour, TourBooking } from '../types'
 
 export const toursApi = {
   getTours: () =>
@@ -9,13 +9,28 @@ export const toursApi = {
     api<Tour>(`/api/tours/${id}`),
 
   bookDeparture: (departureId: string, travelersCount: number = 1) =>
-    api<{ id: string; status: string; travelersCount: number }>(`/api/departures/${departureId}/bookings`, {
+    api<TourBooking>(`/api/departures/${departureId}/bookings`, {
       method: 'POST',
       body: JSON.stringify({ travelersCount }),
     }),
 
   getMyBookings: () =>
-    api<any[]>('/api/me/bookings'),
+    api<TourBooking[]>('/api/me/bookings'),
+
+  cancelBooking: (bookingId: string) =>
+    api<TourBooking>(`/api/bookings/${bookingId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status: 'CANCELLED' }),
+    }),
+
+  updateBookingStatus: (bookingId: string, status: 'CONFIRMED' | 'CANCELLED') =>
+    api<TourBooking>(`/api/bookings/${bookingId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    }),
+
+  getPlannerBookings: () =>
+    api<TourBooking[]>('/api/planner/bookings'),
 }
 
 export default toursApi

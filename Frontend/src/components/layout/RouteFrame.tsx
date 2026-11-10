@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import {
   Bell, Bot, CalendarDays, ChevronDown, ChevronRight, Compass,
   Edit3, Globe2, LayoutDashboard, LogOut, Luggage, MapPin, MessageCircle,
-  Plus, Search, Settings, ShieldCheck, Users, Wallet
+  Plus, Search, Settings, ShieldCheck, Ticket, Users, Wallet
 } from 'lucide-react'
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
@@ -42,6 +42,7 @@ export function RouteFrame({ children }: RouteFrameProps) {
     { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { label: 'Trips', path: '/trips', icon: Compass },
     { label: 'Tours', path: '/tours', icon: Luggage },
+    { label: 'My bookings', path: '/my-bookings', icon: Ticket },
     { label: 'Group travel', path: '/group-travel/explore', icon: Users },
     { label: 'AI planner', path: '/ai-assistant', icon: Bot },
     { label: 'Destinations', path: '/destinations', icon: Globe2 },
@@ -74,6 +75,7 @@ export function RouteFrame({ children }: RouteFrameProps) {
                   Signed in as <strong>{currentUser?.email}</strong>
                 </div>
                 <button className="dropdown-item" onClick={() => { setUserMenuOpen(false); navigate('/profile') }}><Edit3 size={14} /> Profile</button>
+                <button className="dropdown-item" onClick={() => { setUserMenuOpen(false); navigate('/my-bookings') }}><Ticket size={14} /> My tour bookings</button>
                 <button className="dropdown-item" onClick={() => { setUserMenuOpen(false); navigate('/settings') }}><Settings size={14} /> Settings & Privacy</button>
                 <div style={{ padding: '6px 14px 2px', fontSize: '10px', textTransform: 'uppercase', color: '#88948a', fontWeight: 600 }}>Switch Role:</div>
                 <button className="dropdown-item" onClick={() => switchAccount('TRAVELER')}>Traveler view</button>

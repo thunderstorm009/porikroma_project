@@ -311,15 +311,29 @@ async def book_departure_seats(
     if departure["status"] in ("CANCELLED", "COMPLETED"):
         return JSONResponse(status_code=400, content={"error": "Departure is not open for booking"})
 
-    # Check available seats (excluding any existing booking by this traveler if updating)
+    # Reject duplicate active bookings by the same traveler
+    existing_active = await db.fetchrow(
+        """
+        SELECT id, status FROM bookings
+        WHERE departure_id = $1 AND traveler_id = $2 AND status <> 'CANCELLED'
+        """,
+        dep_uuid,
+        traveler_uuid,
+    )
+    if existing_active:
+        return JSONResponse(
+            status_code=400,
+            content={"error": "You already have an active booking for this departure. View your existing reservation in My Bookings."},
+        )
+
+    # Check available seats against total active bookings on this departure
     booked_stats = await db.fetchrow(
         """
         SELECT coalesce(sum(travelers_count)::int, 0) AS booked_count
         FROM bookings
-        WHERE departure_id = $1 AND status <> 'CANCELLED' AND traveler_id <> $2
+        WHERE departure_id = $1 AND status <> 'CANCELLED'
         """,
         dep_uuid,
-        traveler_uuid,
     )
     booked_count = booked_stats["booked_count"] if booked_stats else 0
     available_seats = departure["capacity"] - booked_count
@@ -356,7 +370,7 @@ async def book_departure_seats(
             departure["planner_id"],
             "NEW_BOOKING",
             f"New booking received for {departure['tour_title']}.",
-            "/planner/bookings",
+            "/planner/tours/participants",
         )
     except Exception:
         pass
@@ -406,7 +420,7 @@ async def update_booking_status(
 
     booking = await db.fetchrow(
         """
-        SELECT b.*, td.capacity, td.id AS dep_id, t.planner_id, t.title AS tour_title
+        SELECT b.*, td.capacity, td.id AS dep_id, td.start_date, t.planner_id, t.title AS tour_title
         FROM bookings b
         JOIN tour_departures td ON td.id = b.departure_id
         JOIN tours t ON t.id = td.tour_id
@@ -417,12 +431,22 @@ async def update_booking_status(
     if not booking:
         return JSONResponse(status_code=404, content={"error": "Booking not found"})
 
-    # Permission check: Only the owning planner (or ADMIN) can confirm or cancel bookings for their tours
-    if booking["planner_id"] != user_uuid and current_user["role"] != "ADMIN":
-        return JSONResponse(
-            status_code=403,
-            content={"error": "Only the owning tour planner can confirm or cancel bookings"},
-        )
+    is_owner_planner = (booking["planner_id"] == user_uuid or current_user["role"] == "ADMIN")
+    is_traveler_owner = (booking["traveler_id"] == user_uuid)
+
+    if not is_owner_planner:
+        # A traveler can cancel their own booking before departure if it is pending or confirmed
+        if is_traveler_owner and data.status == "CANCELLED":
+            if booking["status"] == "CANCELLED":
+                return JSONResponse(status_code=400, content={"error": "Booking is already cancelled"})
+            dep_start = parse_date(booking.get("start_date"))
+            if dep_start and dep_start < date.today():
+                return JSONResponse(status_code=400, content={"error": "Cannot cancel a booking after departure has begun"})
+        else:
+            return JSONResponse(
+                status_code=403,
+                content={"error": "Only the owning tour planner can confirm or cancel bookings"},
+            )
 
     # Capacity check if confirming
     if data.status == "CONFIRMED" and booking["status"] != "CONFIRMED":
@@ -453,18 +477,30 @@ async def update_booking_status(
         booking_uuid,
     )
 
-    # Notify traveler
+    # Notifications
     try:
-        await db.execute(
-            """
-            INSERT INTO notifications (user_id, type, detail, link)
-            VALUES ($1, $2, $3, $4)
-            """,
-            booking["traveler_id"],
-            f"BOOKING_{data.status}",
-            f"Your booking for {booking['tour_title']} has been {data.status.lower()}.",
-            "/travel-footprint",
-        )
+        if is_owner_planner:
+            await db.execute(
+                """
+                INSERT INTO notifications (user_id, type, detail, link)
+                VALUES ($1, $2, $3, $4)
+                """,
+                booking["traveler_id"],
+                f"BOOKING_{data.status}",
+                f"Your booking for {booking['tour_title']} has been {data.status.lower()}.",
+                "/my-bookings",
+            )
+        elif is_traveler_owner and data.status == "CANCELLED":
+            await db.execute(
+                """
+                INSERT INTO notifications (user_id, type, detail, link)
+                VALUES ($1, $2, $3, $4)
+                """,
+                booking["planner_id"],
+                "BOOKING_CANCELLED",
+                f"Booking for {booking['tour_title']} was cancelled by traveler.",
+                "/planner/tours/participants",
+            )
     except Exception:
         pass
 
@@ -480,11 +516,15 @@ async def list_my_bookings(
     user_uuid = uuid.UUID(str(current_user["id"]))
     rows = await db.fetch(
         """
-        SELECT b.*, t.title AS tour_title, t.price, td.start_date, td.end_date, d.name AS destination_name
+        SELECT b.*, t.id AS tour_id, t.title AS tour_title, t.price,
+          (t.price * b.travelers_count)::numeric AS total_price,
+          td.start_date, td.end_date, d.name AS destination_name, d.image AS destination_image,
+          d.district, d.division, u.name AS planner_name
         FROM bookings b
         JOIN tour_departures td ON td.id = b.departure_id
         JOIN tours t ON t.id = td.tour_id
         JOIN destinations d ON d.id = t.destination_id
+        JOIN users u ON u.id = t.planner_id
         WHERE b.traveler_id = $1
         ORDER BY td.start_date ASC
         """,

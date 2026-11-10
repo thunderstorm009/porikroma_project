@@ -307,7 +307,10 @@ export function TourDetailsPage() {
                 <div className="modal-icon" style={{ margin: '0 auto 12px' }}><Check size={20} /></div>
                 <h3 style={{ color: 'var(--green)' }}>Booking Successful!</h3>
                 <p style={{ fontSize: '12px', margin: '6px 0 18px', color: '#556b5b' }}>{bookingSuccess}</p>
-                <button className="primary-btn" onClick={() => setSelectedDeparture(null)}>Done</button>
+                <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                  <button className="primary-btn" onClick={() => navigate('/my-bookings')}>View My Bookings</button>
+                  <button className="outline-btn" onClick={() => setSelectedDeparture(null)}>Done</button>
+                </div>
               </div>
             ) : (
               <>

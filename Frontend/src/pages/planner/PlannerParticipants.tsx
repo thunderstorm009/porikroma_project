@@ -36,7 +36,7 @@ export function PlannerParticipants() {
                 <td>{b.traveler_email}</td>
                 <td>{b.tour_title}</td>
                 <td>{b.travelers_count} person</td>
-                <td><span className={`badge ${b.status === 'CONFIRMED' ? 'badge-green' : 'badge-orange'}`}>{b.status}</span></td>
+                <td><span className={`badge ${b.status === 'CONFIRMED' ? 'badge-green' : b.status === 'CANCELLED' ? 'badge-red' : 'badge-orange'}`}>{b.status}</span></td>
                 <td>
                   {b.status === 'PENDING' && (
                     <button className="primary-btn" style={{ height: '28px', fontSize: '11px' }} onClick={() => updateStatus(b.id, 'CONFIRMED')}>Confirm</button>
@@ -47,6 +47,13 @@ export function PlannerParticipants() {
                 </td>
               </tr>
             ))}
+            {!bookings.length && (
+              <tr>
+                <td colSpan={6} style={{ textAlign: 'center', padding: '36px', color: '#889' }}>
+                  No booking reservations received yet.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
