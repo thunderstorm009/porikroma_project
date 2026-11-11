@@ -57,9 +57,16 @@ export function PlannerPage() {
         body: JSON.stringify({ body: msg }),
       })
       setMessages((prev) => [...prev.filter((m) => m.id !== tempUserMsg.id), result.userMessage, result.assistantMessage])
-    } catch {
-      // Fallback assistant response
-      setMessages((prev) => [...prev, { id: `fallback-${Date.now()}`, sender: 'ASSISTANT', body: 'I’ve shaped a personalized route for that destination. Consider a 3-day slow itinerary with ৳8,500 budget buffer and local eco-cottages.' }])
+    } catch (err: any) {
+      // Show error message or fallback assistant response
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `fallback-${Date.now()}`,
+          sender: 'ASSISTANT',
+          body: err?.message || 'I’ve shaped a personalized route for that destination. Consider a 3-day slow itinerary with ৳8,500 budget buffer and local eco-cottages.',
+        },
+      ])
     } finally {
       setLoading(false)
     }

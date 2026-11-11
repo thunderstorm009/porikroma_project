@@ -6,7 +6,8 @@ from app.db import Database, get_db
 from app.deps import get_current_user
 from app.schemas.ai import ConversationCreateRequest, MessageCreateRequest
 from app.serializers import record_to_dict
-from app.services.ai import generate_reply
+from app.services.ai import generate_reply, generate_reply_async
+from app.services.rate_limiter import ai_rate_limiter
 
 router = APIRouter(tags=["AI Travel Planner & Assistant"])
 
@@ -130,9 +131,25 @@ async def send_ai_message(
     if not owned:
         return JSONResponse(status_code=404, content={"error": "Conversation not found"})
 
-    # 1. Load message history to supply to generate_reply
+    # Rate limiting: 10 requests per 60 seconds per user
+    is_allowed, retry_after = ai_rate_limiter.check(str(user_uuid))
+    if not is_allowed:
+        return JSONResponse(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            content={
+                "error": "Rate limit exceeded. Please wait a moment before sending another message.",
+                "retryAfter": retry_after,
+            },
+            headers={"Retry-After": str(retry_after)},
+        )
+
+    # 1. Load message history to supply to Gemini/assistant generator
     past_rows = await db.fetch(
-        "SELECT sender, body, created_at FROM ai_messages WHERE conversation_id = $1 ORDER BY created_at ASC",
+        """
+        SELECT sender, body, created_at FROM ai_messages
+        WHERE conversation_id = $1
+        ORDER BY created_at ASC
+        """,
         convo_uuid,
     )
     history = [record_to_dict(r) for r in past_rows] + [{"sender": "USER", "body": data.body}]
@@ -148,8 +165,8 @@ async def send_ai_message(
         data.body,
     )
 
-    # 3. Generate response using the single LLM swap point function
-    reply_text = generate_reply(history)
+    # 3. Generate response using Gemini API or rule-based fallback
+    reply_text = await generate_reply_async(history)
 
     # 4. Insert assistant message
     ai_row = await db.fetchrow(

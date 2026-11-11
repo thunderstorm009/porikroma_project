@@ -24,6 +24,14 @@ class Settings(BaseSettings):
         default="*",
         description="Allowed CORS origins (comma-separated list of origins or '*' for all)",
     )
+    GEMINI_API_KEY: str = Field(
+        default="",
+        description="Google Gemini API key",
+    )
+    GEMINI_MODEL: str = Field(
+        default="gemini-2.5-flash",
+        description="Google Gemini model identifier",
+    )
 
     model_config = SettingsConfigDict(
         env_file=".env",
