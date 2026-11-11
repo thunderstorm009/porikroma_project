@@ -14,6 +14,7 @@ import { ChecklistTab } from '../../components/workspace/ChecklistTab'
 import { SettingsTab } from '../../components/workspace/SettingsTab'
 import { GroupChatTab } from '../../components/workspace/GroupChatTab'
 import { MembersTab } from '../../components/workspace/MembersTab'
+import { WeatherWidget } from '../../components/common/WeatherWidget'
 
 export function TripWorkspace() {
   const { tripId = '' } = useParams()
@@ -227,6 +228,14 @@ export function TripWorkspace() {
             <button className="panel-link" onClick={() => navigate(`/trips/${tripId}/expenses`)}>
               Manage expenses ledger <ChevronRight size={15} />
             </button>
+          </div>
+
+          <div className="workspace-wide">
+            <WeatherWidget
+              destinationId={trip.destination_id}
+              destinationName={trip.destination_name}
+              datesLabel={`${trip.start_date} – ${trip.end_date}`}
+            />
           </div>
 
           <div className="panel workspace-wide">

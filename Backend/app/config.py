@@ -32,6 +32,10 @@ class Settings(BaseSettings):
         default="gemini-2.5-flash",
         description="Google Gemini model identifier",
     )
+    OPENWEATHER_API_KEY: str = Field(
+        default="",
+        description="OpenWeatherMap API key",
+    )
 
     model_config = SettingsConfigDict(
         env_file=".env",

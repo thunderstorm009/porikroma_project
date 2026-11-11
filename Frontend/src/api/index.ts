@@ -11,4 +11,6 @@ export * from './notifications'
 export * from './footprint'
 export * from './tours'
 export * from './reviews'
+export * from './weather'
+
 

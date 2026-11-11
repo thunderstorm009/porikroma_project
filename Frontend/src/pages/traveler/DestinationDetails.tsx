@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { ChevronRight, Plus, Bot } from 'lucide-react'
 import { api } from '../../api'
 import type { Destination } from '../../types'
+import { WeatherWidget } from '../../components/common/WeatherWidget'
 
 export function DestinationDetails() {
   const { destinationId = '' } = useParams()
@@ -116,7 +117,9 @@ export function DestinationDetails() {
         </main>
 
         <aside className="detail-sidebar">
-          <div className="panel destination-action-panel">
+          <WeatherWidget destinationId={destinationId} destinationName={dest.name} />
+
+          <div className="panel destination-action-panel" style={{ marginTop: '16px' }}>
             <h2>Make it yours</h2>
             <p>Add this destination to an upcoming trip or plan a new one.</p>
             <button className="primary-btn" onClick={() => navigate('/trips/create')}>
