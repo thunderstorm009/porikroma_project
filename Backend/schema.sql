@@ -6,8 +6,11 @@ CREATE TABLE IF NOT EXISTS users (
   email text UNIQUE NOT NULL,
   password_hash text NOT NULL,
   role text NOT NULL DEFAULT 'TRAVELER' CHECK (role IN ('TRAVELER', 'TOUR_PLANNER', 'ADMIN')),
+  status text NOT NULL DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'SUSPENDED', 'BANNED')),
   created_at timestamptz NOT NULL DEFAULT now()
 );
+
+ALTER TABLE users ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'SUSPENDED', 'BANNED'));
 
 CREATE TABLE IF NOT EXISTS destinations (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

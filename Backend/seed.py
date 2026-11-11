@@ -1,15 +1,31 @@
 import asyncio
+from datetime import date, datetime
 import json
 import os
+from pathlib import Path
 import sys
 from typing import Dict
 import asyncpg
 import bcrypt
+from dotenv import load_dotenv
+
+# Load Backend/.env if present
+env_path = Path(__file__).resolve().parent / ".env"
+if env_path.exists():
+    load_dotenv(dotenv_path=env_path)
+else:
+    load_dotenv()
 
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
     f"postgres://{os.getenv('USER', 'postgres')}@localhost:5432/porikroma",
 )
+
+
+def to_date(val):
+    if isinstance(val, str):
+        return date.fromisoformat(val)
+    return val
 
 
 async def seed(database_url: str = DATABASE_URL) -> None:
@@ -251,8 +267,8 @@ async def seed(database_url: str = DATABASE_URL) -> None:
                 creator_id,
                 dest_id,
                 name,
-                start_date,
-                end_date,
+                to_date(start_date),
+                to_date(end_date),
                 status,
                 visibility,
                 budget,
@@ -337,7 +353,7 @@ async def seed(database_url: str = DATABASE_URL) -> None:
                     """INSERT INTO trip_itinerary_items (trip_id, day_date, title, location, notes, sort_order)
                        VALUES ($1, $2, $3, $4, $5, $6)""",
                     trip1_id,
-                    it["dayDate"],
+                    to_date(it["dayDate"]),
                     it["title"],
                     it["location"],
                     it["notes"],
@@ -437,7 +453,7 @@ async def seed(database_url: str = DATABASE_URL) -> None:
                     exp["title"],
                     exp["category"],
                     exp["amount"],
-                    exp["expenseDate"],
+                    to_date(exp["expenseDate"]),
                 )
 
         # Settlements for Trip 1
@@ -577,11 +593,13 @@ async def seed(database_url: str = DATABASE_URL) -> None:
         )
 
         async def get_or_create_departure(tour_id, start_date, end_date, capacity, status):
+            sd = to_date(start_date)
+            ed = to_date(end_date)
             existing = await conn.fetchrow(
                 "SELECT id FROM tour_departures WHERE tour_id = $1 AND start_date = $2 AND end_date = $3 LIMIT 1",
                 tour_id,
-                start_date,
-                end_date,
+                sd,
+                ed,
             )
             if existing:
                 return existing["id"]
@@ -590,8 +608,8 @@ async def seed(database_url: str = DATABASE_URL) -> None:
                    VALUES ($1, $2, $3, $4, $5)
                    RETURNING id""",
                 tour_id,
-                start_date,
-                end_date,
+                sd,
+                ed,
                 capacity,
                 status,
             )
