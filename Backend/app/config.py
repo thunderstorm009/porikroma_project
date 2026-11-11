@@ -36,6 +36,22 @@ class Settings(BaseSettings):
         default="",
         description="OpenWeatherMap API key",
     )
+    EMAIL_PROVIDER: str = Field(
+        default="resend",
+        description="Email provider: resend, postmark, or console",
+    )
+    EMAIL_API_KEY: str = Field(
+        default="",
+        description="Email provider API key",
+    )
+    EMAIL_FROM: str = Field(
+        default="Porikroma <notifications@porikroma.com>",
+        description="Sender address for transactional emails",
+    )
+    FRONTEND_URL: str = Field(
+        default="http://localhost:5173",
+        description="Frontend application URL for verification and reset links",
+    )
 
     model_config = SettingsConfigDict(
         env_file=".env",

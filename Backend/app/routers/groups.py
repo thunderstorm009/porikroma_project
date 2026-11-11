@@ -1,7 +1,7 @@
 import json
 from typing import Any, Dict, List, Optional
 import uuid
-from fastapi import APIRouter, Body, Depends, status
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, status
 from fastapi.responses import JSONResponse
 from app.db import Database, get_db
 from app.deps import get_current_user
@@ -11,6 +11,10 @@ from app.schemas.groups import (
     GroupMessageCreateRequest,
 )
 from app.serializers import record_to_dict
+from app.services.email import (
+    send_group_application_approved_email,
+    send_group_application_rejected_email,
+)
 
 router = APIRouter(tags=["Group Expeditions & Applications"])
 
@@ -316,6 +320,7 @@ async def list_my_applications(
 async def update_application_status(
     id: str,
     data: ApplicationStatusUpdateRequest,
+    background_tasks: BackgroundTasks,
     current_user: dict = Depends(get_current_user),
     db: Database = Depends(get_db),
 ):
@@ -327,9 +332,11 @@ async def update_application_status(
         return JSONResponse(status_code=404, content={"error": "Application not found"})
 
     query = """
-        SELECT a.*, g.organizer_id, g.capacity, g.trip_id, g.title AS group_title
+        SELECT a.*, g.organizer_id, g.capacity, g.trip_id, g.title AS group_title,
+               u.email AS applicant_email, u.name AS applicant_name
         FROM applications a
         JOIN groups g ON g.id = a.group_id
+        LEFT JOIN users u ON u.id = a.applicant_id
         WHERE a.id = $1
     """
     app_record = await db.fetchrow(query, a_uuid)
@@ -392,6 +399,15 @@ async def update_application_status(
             "Your application to join the group trip was approved!",
             "/group-travel/my-groups",
         )
+        # Email applicant in background task
+        if app_record.get("applicant_email"):
+            background_tasks.add_task(
+                send_group_application_approved_email,
+                app_record["applicant_email"],
+                app_record.get("applicant_name") or "Traveler",
+                app_record.get("group_title") or "Expedition Group",
+                str(app_record.get("trip_id") or ""),
+            )
     elif data.status == "REJECTED":
         # Notify applicant
         await db.execute(
@@ -401,6 +417,14 @@ async def update_application_status(
             f"Your application to join {app_record['group_title']} was not approved.",
             "/group-travel/requests",
         )
+        # Email applicant in background task
+        if app_record.get("applicant_email"):
+            background_tasks.add_task(
+                send_group_application_rejected_email,
+                app_record["applicant_email"],
+                app_record.get("applicant_name") or "Traveler",
+                app_record.get("group_title") or "Expedition Group",
+            )
 
     return result
 

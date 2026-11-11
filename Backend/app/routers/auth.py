@@ -3,8 +3,9 @@ import logging
 import random
 import re
 import uuid
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, BackgroundTasks, Depends, status
 from fastapi.responses import JSONResponse
+from app.config import settings
 from app.db import Database, get_db
 from app.deps import get_current_user
 from app.schemas.auth import (
@@ -17,6 +18,10 @@ from app.schemas.auth import (
     VerifyEmailRequest,
 )
 from app.serializers import record_to_dict
+from app.services.email import (
+    send_password_reset_email,
+    send_verification_email,
+)
 from app.services.security import (
     create_access_token,
     create_password_reset_token,
@@ -39,6 +44,7 @@ TARGET_EMAILS = {
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 async def register(
     data: RegisterRequest,
+    background_tasks: BackgroundTasks,
     db: Database = Depends(get_db),
 ):
     """Register new traveler, tour planner, or admin account."""
@@ -83,6 +89,20 @@ async def register(
 
     # 4. Sign JWT
     token = create_access_token({"id": user_dict["id"], "role": user_dict["role"]})
+
+    # 5. Dispatch email verification via background task
+    verify_token = create_access_token(
+        {"id": user_dict["id"], "purpose": "verify-email"},
+        expires_delta=timedelta(days=1),
+    )
+    frontend_base = settings.FRONTEND_URL.rstrip("/")
+    verification_link = f"{frontend_base}/verify-email?token={verify_token}"
+    background_tasks.add_task(
+        send_verification_email,
+        user_dict["email"],
+        verification_link,
+        user_dict.get("name", "Traveler"),
+    )
 
     return JSONResponse(
         status_code=status.HTTP_201_CREATED,
@@ -168,11 +188,12 @@ async def demo_login(
 @router.post("/forgot-password")
 async def forgot_password(
     data: ForgotPasswordRequest,
+    background_tasks: BackgroundTasks,
     db: Database = Depends(get_db),
 ):
-    """Issue self-contained password reset token and console log reset link."""
+    """Issue self-contained password reset token and dispatch reset email in background."""
     user = await db.fetchrow(
-        "SELECT id, email FROM users WHERE email = lower($1)",
+        "SELECT id, name, email FROM users WHERE email = lower($1)",
         data.email,
     )
     if not user:
@@ -185,18 +206,23 @@ async def forgot_password(
     reset_token = create_password_reset_token(
         user_dict["id"], expires_delta=timedelta(hours=1)
     )
-    reset_link = f"/reset-password?token={reset_token}"
+    frontend_base = settings.FRONTEND_URL.rstrip("/")
+    full_reset_link = f"{frontend_base}/reset-password?token={reset_token}"
+    relative_reset_link = f"/reset-password?token={reset_token}"
 
-    print(
-        f"[AUTH FORGOT-PASSWORD] Dispatched reset token for {data.email}: {reset_token}"
+    # Dispatch email in background task (never slows HTTP response)
+    background_tasks.add_task(
+        send_password_reset_email,
+        user_dict["email"],
+        full_reset_link,
+        user_dict.get("name", "Traveler"),
     )
-    logger.info("Password reset token generated: %s (link: %s)", reset_token, reset_link)
 
     return {
         "success": True,
         "message": "Password reset link sent successfully. You can use the provided token or link to reset your password.",
         "resetToken": reset_token,
-        "resetLink": reset_link,
+        "resetLink": relative_reset_link,
     }
 
 
@@ -232,13 +258,49 @@ async def reset_password(
         )
 
 
+@router.post("/send-verification")
+async def send_verification(
+    data: ForgotPasswordRequest,
+    background_tasks: BackgroundTasks,
+    db: Database = Depends(get_db),
+):
+    """Trigger dispatch of a fresh email verification link."""
+    user = await db.fetchrow(
+        "SELECT id, name, email FROM users WHERE email = lower($1)",
+        data.email,
+    )
+    if user:
+        user_dict = record_to_dict(user)
+        verify_token = create_access_token(
+            {"id": user_dict["id"], "purpose": "verify-email"},
+            expires_delta=timedelta(days=1),
+        )
+        frontend_base = settings.FRONTEND_URL.rstrip("/")
+        verification_link = f"{frontend_base}/verify-email?token={verify_token}"
+        background_tasks.add_task(
+            send_verification_email,
+            user_dict["email"],
+            verification_link,
+            user_dict.get("name", "Traveler"),
+        )
+    return {
+        "success": True,
+        "message": "If that email exists in our system, a verification link has been dispatched.",
+    }
+
+
 @router.post("/verify-email")
 async def verify_email(
     data: VerifyEmailRequest,
 ):
     """Email verification endpoint matching legacy contract."""
     if data.token:
-        print(f"[AUTH VERIFY-EMAIL] Email verified with token: {data.token}")
+        try:
+            payload = verify_token(data.token)
+            if payload.get("id"):
+                logger.info("Email verified for user: %s", payload.get("id"))
+        except Exception:
+            pass
     return {"success": True, "message": "Email verified successfully."}
 
 

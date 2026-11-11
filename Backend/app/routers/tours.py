@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from typing import List, Optional
 import uuid
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, BackgroundTasks, Depends, status
 from fastapi.responses import JSONResponse
 from app.db import Database, get_db
 from app.deps import get_current_user
@@ -13,6 +13,10 @@ from app.schemas.tours import (
     TourUpdateRequest,
 )
 from app.serializers import record_to_dict
+from app.services.email import (
+    send_booking_cancelled_email,
+    send_booking_confirmed_email,
+)
 
 router = APIRouter(tags=["Commercial Tours, Departures & Bookings"])
 
@@ -408,6 +412,7 @@ async def list_planner_bookings(
 async def update_booking_status(
     id: str,
     data: BookingStatusUpdateRequest,
+    background_tasks: BackgroundTasks,
     current_user: dict = Depends(get_current_user),
     db: Database = Depends(get_db),
 ):
@@ -420,10 +425,12 @@ async def update_booking_status(
 
     booking = await db.fetchrow(
         """
-        SELECT b.*, td.capacity, td.id AS dep_id, td.start_date, t.planner_id, t.title AS tour_title
+        SELECT b.*, td.capacity, td.id AS dep_id, td.start_date, t.planner_id, t.title AS tour_title,
+               u.email AS traveler_email, u.name AS traveler_name
         FROM bookings b
         JOIN tour_departures td ON td.id = b.departure_id
         JOIN tours t ON t.id = td.tour_id
+        LEFT JOIN users u ON u.id = b.traveler_id
         WHERE b.id = $1
         """,
         booking_uuid,
@@ -477,8 +484,15 @@ async def update_booking_status(
         booking_uuid,
     )
 
-    # Notifications
+    # Notifications & Email Dispatch in Background Task
     try:
+        traveler_email = booking.get("traveler_email")
+        traveler_name = booking.get("traveler_name") or "Traveler"
+        tour_title = booking.get("tour_title") or "Tour"
+        dep_date = str(booking.get("start_date") or "")
+        seats = booking.get("travelers_count") or 1
+        total_price = int(booking.get("total_price") or 0)
+
         if is_owner_planner:
             await db.execute(
                 """
@@ -487,9 +501,29 @@ async def update_booking_status(
                 """,
                 booking["traveler_id"],
                 f"BOOKING_{data.status}",
-                f"Your booking for {booking['tour_title']} has been {data.status.lower()}.",
+                f"Your booking for {tour_title} has been {data.status.lower()}.",
                 "/my-bookings",
             )
+            if data.status == "CONFIRMED" and traveler_email:
+                background_tasks.add_task(
+                    send_booking_confirmed_email,
+                    traveler_email,
+                    traveler_name,
+                    tour_title,
+                    dep_date,
+                    seats,
+                    total_price,
+                    str(booking_uuid),
+                )
+            elif data.status == "CANCELLED" and traveler_email:
+                background_tasks.add_task(
+                    send_booking_cancelled_email,
+                    traveler_email,
+                    traveler_name,
+                    tour_title,
+                    dep_date,
+                    "Cancelled by tour planner",
+                )
         elif is_traveler_owner and data.status == "CANCELLED":
             await db.execute(
                 """
@@ -498,9 +532,18 @@ async def update_booking_status(
                 """,
                 booking["planner_id"],
                 "BOOKING_CANCELLED",
-                f"Booking for {booking['tour_title']} was cancelled by traveler.",
+                f"Booking for {tour_title} was cancelled by traveler.",
                 "/planner/tours/participants",
             )
+            if traveler_email:
+                background_tasks.add_task(
+                    send_booking_cancelled_email,
+                    traveler_email,
+                    traveler_name,
+                    tour_title,
+                    dep_date,
+                    "Cancelled by traveler",
+                )
     except Exception:
         pass
 
