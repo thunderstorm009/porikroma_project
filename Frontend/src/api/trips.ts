@@ -35,7 +35,7 @@ export const tripsApi = {
     api(`/api/trips/${tripId}/itinerary/${itemId}`, { method: 'DELETE' }),
 
   // Map places
-  addMapPlace: (tripId: string, place: { name: string; category?: string; notes?: string }) =>
+  addMapPlace: (tripId: string, place: { name: string; category?: string; notes?: string; lat?: number; lng?: number }) =>
     api(`/api/trips/${tripId}/map-places`, {
       method: 'POST',
       body: JSON.stringify(place),

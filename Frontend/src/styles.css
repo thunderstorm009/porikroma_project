@@ -53,3 +53,52 @@
 .search-result-item:hover{background:#f3f7f2}
 .search-result-item strong{display:block;font-size:13px}
 .search-result-item small{color:#79857d}
+
+/* Leaflet real map styles & responsiveness */
+.porikroma-map-container {
+  width: 100%;
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.porikroma-map-container .leaflet-container {
+  width: 100%;
+  height: 100%;
+  font-family: inherit;
+  z-index: 1;
+}
+
+.porikroma-map-container .leaflet-popup-content-wrapper {
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  padding: 2px;
+}
+
+.porikroma-map-container .leaflet-popup-content {
+  margin: 10px 12px;
+  line-height: 1.4;
+  font-size: 12px;
+}
+
+.porikroma-map-container .leaflet-control-attribution {
+  font-size: 10px;
+  background: rgba(255, 255, 255, 0.85);
+  padding: 2px 6px;
+}
+
+.custom-leaflet-place-icon,
+.custom-itinerary-stop-icon,
+.district-icon-visited,
+.district-icon-unvisited {
+  background: transparent;
+  border: none;
+}
+
+@media (max-width: 768px) {
+  .porikroma-map-container {
+    height: 300px !important;
+  }
+}
+

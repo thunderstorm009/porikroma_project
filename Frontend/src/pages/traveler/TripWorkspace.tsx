@@ -289,7 +289,7 @@ export function TripWorkspace() {
 
       {/* Tab 7: Map */}
       {currentTab === 'map' && (
-        <MapTab tripId={tripId} destinationName={trip.destination_name || ''} places={mapPlaces} onRefresh={loadWorkspace} />
+        <MapTab tripId={tripId} destinationName={trip.destination_name || ''} places={mapPlaces} itinerary={itinerary} onRefresh={loadWorkspace} />
       )}
 
       {/* Tab 7: Checklist */}

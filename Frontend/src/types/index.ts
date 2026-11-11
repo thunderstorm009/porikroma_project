@@ -87,13 +87,13 @@ export interface TripPhoto {
 
 export interface WorkspaceData {
   trip: Trip
-  itinerary: { id: string; day_date: string; title: string; location?: string; notes?: string; sort_order: number }[]
+  itinerary: { id: string; day_date: string; title: string; location?: string; notes?: string; sort_order: number; lat?: number; lng?: number }[]
   checklist: { id: string; title: string; completed: boolean }[]
   notes: { id: string; body: string; author_name?: string; created_at: string }[]
   photos: TripPhoto[]
   members: { id: string; name: string; email: string; role: string }[]
   expenses: { id: string; title: string; category: string; amount: number; expense_date: string; paid_by_name: string }[]
-  mapPlaces: { id: string; name: string; category: string; notes?: string }[]
+  mapPlaces: { id: string; name: string; category: string; notes?: string; lat?: number; lng?: number; created_at?: string }[]
   group?: GroupExpedition | null
 }
 
