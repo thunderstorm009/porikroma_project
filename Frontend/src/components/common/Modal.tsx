@@ -19,7 +19,7 @@ export function Modal({ isOpen, onClose, title, description, children, maxWidth 
         <button className="modal-close" onClick={onClose} aria-label="Close modal">
           <X size={18} />
         </button>
-        {title && <h2>{title}</h2>}
+        {title && <h2 className="modal-title">{title}</h2>}
         {description && <p className="modal-description">{description}</p>}
         {children}
       </div>

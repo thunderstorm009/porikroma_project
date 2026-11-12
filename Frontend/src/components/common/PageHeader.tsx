@@ -15,7 +15,7 @@ export function PageHeader({ eyebrow, title, description, action }: PageHeaderPr
         <h1>{title}</h1>
         {description && <p className="heading-description">{description}</p>}
       </div>
-      {action && <div>{action}</div>}
+      {action && <div className="page-heading-action">{action}</div>}
     </div>
   )
 }

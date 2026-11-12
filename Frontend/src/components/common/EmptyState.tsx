@@ -10,10 +10,10 @@ export interface EmptyStateProps {
 export function EmptyState({ title, message, icon, action }: EmptyStateProps) {
   return (
     <div className="empty-state">
-      {icon}
-      <strong>{title}</strong>
-      <span>{message}</span>
-      {action && <div style={{ marginTop: '8px' }}>{action}</div>}
+      {icon && <div className="empty-state-icon">{icon}</div>}
+      <strong className="empty-state-title">{title}</strong>
+      <span className="empty-state-message">{message}</span>
+      {action && <div className="empty-state-action">{action}</div>}
     </div>
   )
 }
