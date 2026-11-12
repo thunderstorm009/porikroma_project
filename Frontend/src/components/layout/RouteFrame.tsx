@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
 import {
   Bell, Bot, CalendarDays, ChevronDown, ChevronRight, Compass,
-  Edit3, Globe2, LayoutDashboard, LogOut, Luggage, MapPin, MessageCircle,
-  Plus, Search, Settings, ShieldCheck, Ticket, Users, Wallet
+  Edit3, Globe2, LayoutDashboard, LogOut, Luggage, MapPin, Menu, MessageCircle,
+  Plus, Search, Settings, ShieldCheck, Ticket, Users, Wallet, X
 } from 'lucide-react'
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
@@ -22,6 +22,7 @@ export function RouteFrame({ children }: RouteFrameProps) {
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const logout = () => {
     authLogout()
@@ -54,14 +55,17 @@ export function RouteFrame({ children }: RouteFrameProps) {
 
   return (
     <div className="route-shell">
-      <aside className="sidebar route-sidebar">
-        <div className="brand" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
+      {mobileMenuOpen && (
+        <div className="sidebar-backdrop" onClick={() => setMobileMenuOpen(false)} />
+      )}
+      <aside className={`sidebar route-sidebar ${mobileMenuOpen ? 'open' : ''}`}>
+        <div className="brand" onClick={() => { setMobileMenuOpen(false); navigate('/') }}>
           <span className="brand-mark">p</span>
           <span>porikroma</span>
         </div>
 
         {currentUser ? (
-          <div className="workspace-switcher" onClick={() => setUserMenuOpen(!userMenuOpen)} style={{ cursor: 'pointer', position: 'relative' }}>
+          <div className="workspace-switcher" onClick={() => setUserMenuOpen(!userMenuOpen)}>
             <div className="avatar">{currentUser?.name?.[0] || 'R'}</div>
             <div>
               <strong>{currentUser?.name || 'Rafi Ahmed'}</strong>
@@ -70,29 +74,29 @@ export function RouteFrame({ children }: RouteFrameProps) {
             <ChevronDown size={15} />
 
             {userMenuOpen && (
-              <div className="dropdown-menu" onClick={(e) => e.stopPropagation()}>
-                <div style={{ padding: '8px 14px', borderBottom: '1px solid #edf0ea', fontSize: '11px', color: '#77827a' }}>
+              <div className="dropdown-menu user-dropdown-menu" onClick={(e) => e.stopPropagation()}>
+                <div className="dropdown-header">
                   Signed in as <strong>{currentUser?.email}</strong>
                 </div>
-                <button className="dropdown-item" onClick={() => { setUserMenuOpen(false); navigate('/profile') }}><Edit3 size={14} /> Profile</button>
-                <button className="dropdown-item" onClick={() => { setUserMenuOpen(false); navigate('/my-bookings') }}><Ticket size={14} /> My tour bookings</button>
-                <button className="dropdown-item" onClick={() => { setUserMenuOpen(false); navigate('/settings') }}><Settings size={14} /> Settings & Privacy</button>
-                <div style={{ padding: '6px 14px 2px', fontSize: '10px', textTransform: 'uppercase', color: '#88948a', fontWeight: 600 }}>Switch Role:</div>
+                <button className="dropdown-item" onClick={() => { setUserMenuOpen(false); setMobileMenuOpen(false); navigate('/profile') }}><Edit3 size={14} /> Profile</button>
+                <button className="dropdown-item" onClick={() => { setUserMenuOpen(false); setMobileMenuOpen(false); navigate('/my-bookings') }}><Ticket size={14} /> My tour bookings</button>
+                <button className="dropdown-item" onClick={() => { setUserMenuOpen(false); setMobileMenuOpen(false); navigate('/settings') }}><Settings size={14} /> Settings & Privacy</button>
+                <div className="dropdown-label">Switch Role:</div>
                 <button className="dropdown-item" onClick={() => switchAccount('TRAVELER')}>Traveler view</button>
                 <button className="dropdown-item" onClick={() => switchAccount('TOUR_PLANNER')}>Tour planner view</button>
                 <button className="dropdown-item" onClick={() => switchAccount('ADMIN')}>Admin view</button>
-                <div style={{ borderTop: '1px solid #edf0ea', marginTop: '4px' }}>
-                  <button className="dropdown-item" style={{ color: '#b33' }} onClick={logout}><LogOut size={14} /> Sign out</button>
+                <div className="dropdown-divider">
+                  <button className="dropdown-item dropdown-item-danger" onClick={logout}><LogOut size={14} /> Sign out</button>
                 </div>
               </div>
             )}
           </div>
         ) : (
-          <div className="workspace-switcher" onClick={() => navigate('/login')} style={{ cursor: 'pointer' }}>
-            <div className="avatar" style={{ background: '#e1e8df', color: '#3f5847' }}>?</div>
+          <div className="workspace-switcher" onClick={() => { setMobileMenuOpen(false); navigate('/login') }}>
+            <div className="avatar avatar-guest">?</div>
             <div>
               <strong>Guest Explorer</strong>
-              <small style={{ color: 'var(--green)' }}>Sign in to book</small>
+              <small className="workspace-action-text">Sign in to book</small>
             </div>
           </div>
         )}
@@ -100,20 +104,33 @@ export function RouteFrame({ children }: RouteFrameProps) {
         <p className="nav-label">Workspace</p>
         <nav className="primary-nav">
           {links.map(({ label, path, icon: Icon }) => (
-            <Link className={location.pathname.startsWith(path) ? 'nav-item active' : 'nav-item'} to={path} key={path}>
+            <Link
+              className={location.pathname.startsWith(path) ? 'nav-item active' : 'nav-item'}
+              to={path}
+              key={path}
+              onClick={() => setMobileMenuOpen(false)}
+            >
               <Icon size={18} />
               <span>{label}</span>
               {label === 'AI planner' && <span className="new-dot" />}
             </Link>
           ))}
           {currentUser?.role === 'TOUR_PLANNER' && (
-            <Link className={location.pathname.startsWith('/planner') ? 'nav-item active' : 'nav-item'} to="/planner/dashboard">
+            <Link
+              className={location.pathname.startsWith('/planner') ? 'nav-item active' : 'nav-item'}
+              to="/planner/dashboard"
+              onClick={() => setMobileMenuOpen(false)}
+            >
               <ShieldCheck size={18} />
               <span>Planner ops</span>
             </Link>
           )}
           {currentUser?.role === 'ADMIN' && (
-            <Link className={location.pathname.startsWith('/admin') ? 'nav-item active' : 'nav-item'} to="/admin/dashboard">
+            <Link
+              className={location.pathname.startsWith('/admin') ? 'nav-item active' : 'nav-item'}
+              to="/admin/dashboard"
+              onClick={() => setMobileMenuOpen(false)}
+            >
               <Settings size={18} />
               <span>Admin control</span>
             </Link>
@@ -122,16 +139,16 @@ export function RouteFrame({ children }: RouteFrameProps) {
 
         {currentUser ? (
           <div className="sidebar-bottom">
-            <button className="nav-item" onClick={() => navigate('/notifications')}>
+            <button className="nav-item" onClick={() => { setMobileMenuOpen(false); navigate('/notifications') }}>
               <Bell size={18} />
               <span>Notifications</span>
               {unreadCount > 0 && <span className="notification-count">{unreadCount}</span>}
             </button>
-            <button className="nav-item" onClick={() => navigate('/settings')}>
+            <button className="nav-item" onClick={() => { setMobileMenuOpen(false); navigate('/settings') }}>
               <Settings size={18} />
               <span>Settings</span>
             </button>
-            <div className="profile-row" onClick={() => navigate('/profile')} style={{ cursor: 'pointer' }}>
+            <div className="profile-row" onClick={() => { setMobileMenuOpen(false); navigate('/profile') }}>
               <div className="avatar">{currentUser?.name?.[0] || 'R'}</div>
               <div>
                 <strong>{currentUser?.name || 'Rafi Ahmed'}</strong>
@@ -140,11 +157,11 @@ export function RouteFrame({ children }: RouteFrameProps) {
             </div>
           </div>
         ) : (
-          <div className="sidebar-bottom" style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '12px' }}>
-            <button className="primary-btn small" onClick={() => navigate('/login')} style={{ width: '100%', justifyContent: 'center' }}>
+          <div className="sidebar-bottom sidebar-guest-actions">
+            <button className="primary-btn small" onClick={() => { setMobileMenuOpen(false); navigate('/login') }}>
               Sign in
             </button>
-            <button className="outline-btn small" onClick={() => navigate('/register')} style={{ width: '100%', justifyContent: 'center' }}>
+            <button className="outline-btn small" onClick={() => { setMobileMenuOpen(false); navigate('/register') }}>
               Register
             </button>
           </div>
@@ -153,6 +170,14 @@ export function RouteFrame({ children }: RouteFrameProps) {
 
       <main className="main-content">
         <header className="topbar">
+          <button
+            className="mobile-menu"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle navigation"
+          >
+            {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+          </button>
+
           <div className="breadcrumbs">
             <span>Workspace</span>
             <ChevronRight size={14} />
@@ -160,7 +185,7 @@ export function RouteFrame({ children }: RouteFrameProps) {
           </div>
 
           <div className="top-actions">
-            <div className="top-search" onClick={() => setSearchOpen(true)} style={{ cursor: 'pointer' }}>
+            <div className="top-search" onClick={() => setSearchOpen(true)}>
               <Search size={16} />
               <input placeholder="Search anything (destinations, trips...)" readOnly />
               <kbd>⌘ K</kbd>
@@ -168,37 +193,42 @@ export function RouteFrame({ children }: RouteFrameProps) {
 
             {currentUser ? (
               <>
-                <div style={{ position: 'relative' }}>
-                  <button className="icon-btn notification-btn" onClick={() => setNotificationsOpen(!notificationsOpen)}>
+                <div className="notification-wrapper">
+                  <button className="icon-btn notification-btn" onClick={() => setNotificationsOpen(!notificationsOpen)} aria-label="Notifications">
                     <Bell size={19} />
                     {unreadCount > 0 && <i />}
                   </button>
 
                   {notificationsOpen && (
-                    <div className="dropdown-menu" style={{ width: '320px', right: 0 }} onClick={(e) => e.stopPropagation()}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', borderBottom: '1px solid #edf0ea' }}>
+                    <div className="dropdown-menu notification-dropdown" onClick={(e) => e.stopPropagation()}>
+                      <div className="notification-dropdown-header">
                         <strong>Notifications</strong>
-                        <button style={{ fontSize: '11px', color: 'var(--green)' }} onClick={() => markAllAsRead()}>Mark all read</button>
+                        <button className="notification-mark-all" onClick={() => markAllAsRead()}>Mark all read</button>
                       </div>
-                      <div style={{ maxHeight: '280px', overflowY: 'auto' }}>
+                      <div className="notification-dropdown-list">
                         {notificationsList.length ? (
                           notificationsList.slice(0, 5).map((n) => (
-                            <div key={n.id} style={{ padding: '10px 14px', borderBottom: '1px solid #edf0ea', fontSize: '11px', cursor: 'pointer', background: n.read ? '#fff' : '#f6faf4' }}
+                            <div
+                              key={n.id}
+                              className={`notification-item ${n.read ? 'read' : 'unread'}`}
                               onClick={() => {
                                 markAsRead(n.id)
                                 setNotificationsOpen(false)
                                 if (n.link) navigate(n.link)
-                              }}>
+                              }}
+                            >
                               <strong>{n.type}</strong>
-                              <p style={{ margin: '3px 0 0', color: '#6d7770' }}>{n.detail}</p>
+                              <p className="notification-item-detail">{n.detail}</p>
                             </div>
                           ))
                         ) : (
-                          <div style={{ padding: '20px', textAlign: 'center', color: '#889' }}>No notifications</div>
+                          <div className="notification-empty">No notifications</div>
                         )}
                       </div>
-                      <button className="dropdown-item" style={{ justifyContent: 'center', borderTop: '1px solid #edf0ea', fontWeight: 600 }}
-                        onClick={() => { setNotificationsOpen(false); navigate('/notifications') }}>
+                      <button
+                        className="dropdown-item notification-footer-link"
+                        onClick={() => { setNotificationsOpen(false); navigate('/notifications') }}
+                      >
                         See all notifications
                       </button>
                     </div>
@@ -210,7 +240,7 @@ export function RouteFrame({ children }: RouteFrameProps) {
                 </Link>
               </>
             ) : (
-              <div style={{ display: 'flex', gap: '8px' }}>
+              <div className="top-guest-actions">
                 <button className="outline-btn small" onClick={() => navigate('/login')}>Sign in</button>
                 <button className="primary-btn small" onClick={() => navigate('/register')}>Start planning</button>
               </div>
