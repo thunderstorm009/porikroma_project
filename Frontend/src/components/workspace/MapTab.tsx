@@ -221,9 +221,9 @@ export function MapTab({ tripId, destinationName, places, itinerary = [], onRefr
             <Polyline
               positions={polylineCoords}
               pathOptions={{
-                color: "var(--color-secondary)",
-                weight: 4,
-                opacity: 0.85,
+                color: "#283130",
+                weight: 3,
+                opacity: 0.9,
                 dashArray: "6, 8",
               }}
             />

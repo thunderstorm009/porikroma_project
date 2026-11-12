@@ -135,13 +135,7 @@ export function FootprintPage({ subpage = 'overview' }: FootprintPageProps) {
                 className="porikroma-map-container"
                 style={{
                   height: '380px',
-                  width: '100%',
-                  borderRadius: '10px',
-                  overflow: 'hidden',
-                  position: 'relative',
                   margin: '16px 0 12px',
-                  border: '1px solid #c8d7c4',
-                  zIndex: 0,
                 }}
               >
                 <MapContainer
@@ -167,7 +161,7 @@ export function FootprintPage({ subpage = 'overview' }: FootprintPageProps) {
                         <Popup>
                           <div style={{ minWidth: '160px', fontFamily: 'inherit' }}>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-                              <strong style={{ fontSize: '13px', color: '#1f3d2b' }}>{district.name}</strong>
+                              <strong style={{ fontSize: '13px', color: 'var(--color-text-primary)' }}>{district.name}</strong>
                               <span
                                 className={`badge ${isVisited ? 'badge-green' : 'badge-gray'}`}
                                 style={{ fontSize: '10px', padding: '2px 6px' }}
@@ -175,15 +169,15 @@ export function FootprintPage({ subpage = 'overview' }: FootprintPageProps) {
                                 {isVisited ? 'Visited ✓' : 'Unexplored'}
                               </span>
                             </div>
-                            <small style={{ color: '#6d7770', display: 'block', marginTop: '2px' }}>
+                            <small style={{ color: 'var(--color-text-muted)', display: 'block', marginTop: '2px' }}>
                               {district.division} Division
                             </small>
                             {isVisited ? (
-                              <div style={{ marginTop: '6px', fontSize: '11px', color: '#15803d', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <div style={{ marginTop: '6px', fontSize: '11px', color: 'var(--color-success)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                 <CheckCircle2 size={12} /> Stamped in your passport
                               </div>
                             ) : (
-                              <div style={{ marginTop: '6px', fontSize: '11px', color: '#889988', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <div style={{ marginTop: '6px', fontSize: '11px', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                 <Circle size={10} /> Plan a trip to unlock
                               </div>
                             )}
@@ -196,16 +190,16 @@ export function FootprintPage({ subpage = 'overview' }: FootprintPageProps) {
               </div>
 
               {/* Map Legend */}
-              <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center', padding: '10px 14px', background: '#f4f7f2', borderRadius: '8px', fontSize: '12px', color: '#445547' }}>
+              <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center', padding: '10px 14px', background: 'var(--color-surface-elevated)', border: 'var(--border-width) solid var(--color-border)', borderRadius: 'var(--radius-md)', fontSize: '12px', color: 'var(--color-text-secondary)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#10b981', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '8px', fontWeight: 'bold' }}>✓</span>
+                  <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#283130', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#E8E8E8', fontSize: '8px', fontWeight: 'bold' }}>✓</span>
                   <strong>Visited Districts ({visitedCount})</strong>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#94a3b8', display: 'inline-block' }} />
+                  <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#B8B8B8', border: '1.5px solid #283130', display: 'inline-block' }} />
                   <span>Unexplored ({64 - visitedCount})</span>
                 </div>
-                <div style={{ marginLeft: 'auto', color: '#6d7770', fontSize: '11px' }}>
+                <div style={{ marginLeft: 'auto', color: 'var(--color-text-muted)', fontSize: '11px' }}>
                   OpenStreetMap tiles
                 </div>
               </div>
