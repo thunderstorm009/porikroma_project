@@ -1,29 +1,29 @@
-import { useState } from 'react'
-import { Plus, Trash2 } from 'lucide-react'
-import { api } from '../../api'
-import type { WorkspaceData } from '../../types'
+import { useState } from "react"
+import { Plus, Trash2 } from "lucide-react"
+import { api } from "../../api"
+import type { WorkspaceData } from "../../types"
 
 export interface NotesTabProps {
   tripId: string
-  notes: WorkspaceData['notes']
+  notes: WorkspaceData["notes"]
   onRefresh: () => void
 }
 
 export function NotesTab({ tripId, notes, onRefresh }: NotesTabProps) {
-  const [body, setBody] = useState('')
+  const [body, setBody] = useState("")
 
   const save = async () => {
     if (!body.trim()) return
     await api(`/api/trips/${tripId}/notes`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify({ body: body.trim() }),
     })
-    setBody('')
+    setBody("")
     onRefresh()
   }
 
   const deleteNote = async (id: string) => {
-    await api(`/api/trips/${tripId}/notes/${id}`, { method: 'DELETE' })
+    await api(`/api/trips/${tripId}/notes/${id}`, { method: "DELETE" })
     onRefresh()
   }
 
@@ -36,29 +36,29 @@ export function NotesTab({ tripId, notes, onRefresh }: NotesTabProps) {
         </div>
       </div>
 
-      <div style={{ margin: '14px 0' }}>
+      <div className="notes-tab-form">
         <textarea
-          style={{ width: '100%', borderRadius: '8px', border: '1px solid var(--line)', padding: '10px', fontSize: '12px' }}
+          className="notes-tab-textarea"
           placeholder="Write a note, reminder, or transport detail..."
           rows={3}
           value={body}
           onChange={(e) => setBody(e.target.value)}
         />
-        <button className="primary-btn" style={{ marginTop: '8px' }} onClick={save}><Plus size={15} /> Save note</button>
+        <button className="primary-btn notes-tab-save-btn" onClick={save}><Plus size={15} /> Save note</button>
       </div>
 
-      <div style={{ marginTop: '20px' }}>
+      <div className="notes-tab-list">
         {notes.map((n) => (
-          <div key={n.id} style={{ background: '#fcfdfa', border: '1px solid #edf0ea', borderRadius: '8px', padding: '14px', marginBottom: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div key={n.id} className="notes-tab-card">
             <div>
-              <p style={{ margin: 0, fontSize: '13px', lineHeight: 1.5 }}>{n.body}</p>
-              <small style={{ color: '#889', marginTop: '6px', display: 'block' }}>{n.author_name || 'You'} · {new Date(n.created_at).toLocaleDateString()}</small>
+              <p className="notes-tab-body">{n.body}</p>
+              <small className="notes-tab-sub">{n.author_name || "You"} · {new Date(n.created_at).toLocaleDateString()}</small>
             </div>
             <button className="icon-btn" onClick={() => deleteNote(n.id)} title="Delete note"><Trash2 size={14} /></button>
           </div>
         ))}
         {!notes.length && (
-          <div style={{ padding: '24px', textAlign: 'center', color: '#889' }}>No notes yet. Add your first note above!</div>
+          <div className="notes-tab-empty">No notes yet. Add your first note above!</div>
         )}
       </div>
     </div>

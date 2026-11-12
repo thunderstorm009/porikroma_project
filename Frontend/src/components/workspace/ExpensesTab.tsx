@@ -1,14 +1,15 @@
-import { useEffect, useState } from 'react'
-import { Plus, Users, Trash2, X, Check, Clock, CheckCircle2 } from 'lucide-react'
-import { api, expensesApi } from '../../api'
-import { useAuth } from '../../context/AuthContext'
-import type { Settlement, Trip, WorkspaceData } from '../../types'
+import { useEffect, useState } from "react"
+import { Plus, Users, Trash2, X, Check, Clock, CheckCircle2 } from "lucide-react"
+import { expensesApi } from "../../api"
+import { useAuth } from "../../context/AuthContext"
+import { StatusBadge } from "../common/StatusBadge"
+import type { Settlement, Trip, WorkspaceData } from "../../types"
 
 export interface ExpensesTabProps {
   tripId: string
   trip: Trip
-  expenses: WorkspaceData['expenses']
-  members: WorkspaceData['members']
+  expenses: WorkspaceData["expenses"]
+  members: WorkspaceData["members"]
   onRefresh: () => void
 }
 
@@ -16,11 +17,11 @@ export function ExpensesTab({ tripId, trip, expenses, members, onRefresh }: Expe
   const { user: currentUser } = useAuth()
   const [showModal, setShowModal] = useState(false)
   const [showSettlementModal, setShowSettlementModal] = useState(false)
-  const [form, setForm] = useState({ title: '', category: 'Food & drink', amount: '', expenseDate: new Date().toISOString().slice(0, 10) })
-  const [settlementForm, setSettlementForm] = useState({ toUserId: members[0]?.id || '', amount: '1000' })
+  const [form, setForm] = useState({ title: "", category: "Food & drink", amount: "", expenseDate: new Date().toISOString().slice(0, 10) })
+  const [settlementForm, setSettlementForm] = useState({ toUserId: members[0]?.id || "", amount: "1000" })
   const [settlements, setSettlements] = useState<Settlement[]>([])
   const [updatingId, setUpdatingId] = useState<string | null>(null)
-  const [settlementError, setSettlementError] = useState('')
+  const [settlementError, setSettlementError] = useState("")
 
   useEffect(() => {
     expensesApi.getSettlements(tripId).then(setSettlements).catch(() => undefined)
@@ -30,19 +31,19 @@ export function ExpensesTab({ tripId, trip, expenses, members, onRefresh }: Expe
 
   // Trip-level settlements summary in BDT
   const settledTotal = settlements
-    .filter((s) => s.status === 'CONFIRMED')
+    .filter((s) => s.status === "CONFIRMED")
     .reduce((sum, s) => sum + Number(s.amount), 0)
 
   const outstandingTotal = settlements
-    .filter((s) => s.status !== 'CONFIRMED' && s.status !== 'CANCELLED')
+    .filter((s) => s.status !== "CONFIRMED" && s.status !== "CANCELLED")
     .reduce((sum, s) => sum + Number(s.amount), 0)
 
   const pendingTotal = settlements
-    .filter((s) => s.status === 'PENDING')
+    .filter((s) => s.status === "PENDING")
     .reduce((sum, s) => sum + Number(s.amount), 0)
 
   const paidAwaitingConfirmTotal = settlements
-    .filter((s) => s.status === 'PAID')
+    .filter((s) => s.status === "PAID")
     .reduce((sum, s) => sum + Number(s.amount), 0)
 
   const addExpense = async () => {
@@ -55,7 +56,7 @@ export function ExpensesTab({ tripId, trip, expenses, members, onRefresh }: Expe
       expenseDate: form.expenseDate,
     })
     setShowModal(false)
-    setForm({ title: '', category: 'Food & drink', amount: '', expenseDate: new Date().toISOString().slice(0, 10) })
+    setForm({ title: "", category: "Food & drink", amount: "", expenseDate: new Date().toISOString().slice(0, 10) })
     onRefresh()
   }
 
@@ -66,33 +67,33 @@ export function ExpensesTab({ tripId, trip, expenses, members, onRefresh }: Expe
 
   const recordSettlement = async () => {
     if (!settlementForm.toUserId || !settlementForm.amount) return
-    setSettlementError('')
+    setSettlementError("")
     try {
       const newSettlement = await expensesApi.recordSettlement(tripId, {
         toUserId: settlementForm.toUserId,
         amount: Number(settlementForm.amount),
-        status: 'PENDING',
+        status: "PENDING",
       })
       setShowSettlementModal(false)
       // Immediately add to state so totals update immediately
       setSettlements((prev) => [newSettlement, ...prev])
-      setSettlementForm({ toUserId: members[0]?.id || '', amount: '1000' })
+      setSettlementForm({ toUserId: members[0]?.id || "", amount: "1000" })
     } catch (err: any) {
-      setSettlementError(err?.message || 'Failed to record settlement')
+      setSettlementError(err?.message || "Failed to record settlement")
     }
   }
 
   const handleMarkPaid = async (settlementId: string) => {
     setUpdatingId(settlementId)
-    setSettlementError('')
+    setSettlementError("")
     try {
-      const updated = await expensesApi.updateSettlementStatus(settlementId, 'PAID')
+      const updated = await expensesApi.updateSettlementStatus(settlementId, "PAID")
       // Immediately update local state so outstanding totals update immediately
       setSettlements((prev) =>
-        prev.map((s) => (s.id === settlementId ? { ...s, ...updated, status: 'PAID' } : s))
+        prev.map((s) => (s.id === settlementId ? { ...s, ...updated, status: "PAID" } : s))
       )
     } catch (err: any) {
-      setSettlementError(err?.message || 'Failed to mark as paid')
+      setSettlementError(err?.message || "Failed to mark as paid")
     } finally {
       setUpdatingId(null)
     }
@@ -100,15 +101,15 @@ export function ExpensesTab({ tripId, trip, expenses, members, onRefresh }: Expe
 
   const handleConfirmReceived = async (settlementId: string) => {
     setUpdatingId(settlementId)
-    setSettlementError('')
+    setSettlementError("")
     try {
-      const updated = await expensesApi.updateSettlementStatus(settlementId, 'CONFIRMED')
+      const updated = await expensesApi.updateSettlementStatus(settlementId, "CONFIRMED")
       // Immediately update local state so outstanding totals update immediately
       setSettlements((prev) =>
-        prev.map((s) => (s.id === settlementId ? { ...s, ...updated, status: 'CONFIRMED' } : s))
+        prev.map((s) => (s.id === settlementId ? { ...s, ...updated, status: "CONFIRMED" } : s))
       )
     } catch (err: any) {
-      setSettlementError(err?.message || 'Failed to confirm receipt')
+      setSettlementError(err?.message || "Failed to confirm receipt")
     } finally {
       setUpdatingId(null)
     }
@@ -125,7 +126,7 @@ export function ExpensesTab({ tripId, trip, expenses, members, onRefresh }: Expe
         <div>
           <span>Total spent</span>
           <strong>৳ {total.toLocaleString()}</strong>
-          <small className="positive">{total <= trip.budget ? 'Within budget' : 'Over budget'}</small>
+          <small className="positive">{total <= trip.budget ? "Within budget" : "Over budget"}</small>
         </div>
         <div>
           <span>Remaining</span>
@@ -143,11 +144,15 @@ export function ExpensesTab({ tripId, trip, expenses, members, onRefresh }: Expe
         </div>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '20px 0 10px' }}>
+      <div className="expenses-tab-header">
         <h2>Expense ledger</h2>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button className="secondary-btn" onClick={() => setShowSettlementModal(true)}><Users size={15} /> Settle balances</button>
-          <button className="primary-btn" onClick={() => setShowModal(true)}><Plus size={15} /> Add expense</button>
+        <div className="expenses-tab-header-actions">
+          <button className="secondary-btn" onClick={() => setShowSettlementModal(true)}>
+            <Users size={15} /> Settle balances
+          </button>
+          <button className="primary-btn" onClick={() => setShowModal(true)}>
+            <Plus size={15} /> Add expense
+          </button>
         </div>
       </div>
 
@@ -172,13 +177,15 @@ export function ExpensesTab({ tripId, trip, expenses, members, onRefresh }: Expe
                 <td>{exp.expense_date}</td>
                 <td><strong>৳ {Number(exp.amount).toLocaleString()}</strong></td>
                 <td>
-                  <button className="icon-btn" onClick={() => deleteExpense(exp.id)} title="Delete expense"><Trash2 size={14} /></button>
+                  <button className="icon-btn" onClick={() => deleteExpense(exp.id)} title="Delete expense">
+                    <Trash2 size={14} />
+                  </button>
                 </td>
               </tr>
             ))}
             {!expenses.length && (
               <tr>
-                <td colSpan={6} style={{ textAlign: 'center', padding: '24px', color: '#889' }}>No expenses recorded yet.</td>
+                <td colSpan={6} className="expenses-tab-empty-table-cell">No expenses recorded yet.</td>
               </tr>
             )}
           </tbody>
@@ -186,11 +193,11 @@ export function ExpensesTab({ tripId, trip, expenses, members, onRefresh }: Expe
       </div>
 
       {/* Settlements Section & Summary */}
-      <div style={{ marginTop: '36px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px' }}>
+      <div className="expenses-tab-settlements">
+        <div className="expenses-tab-settlements-header">
           <div>
-            <h3 style={{ margin: '0 0 4px', fontSize: '18px' }}>Settlements & Balances</h3>
-            <p style={{ margin: 0, color: '#64748b', fontSize: '12px' }}>
+            <h3 className="expenses-tab-settlements-title">Settlements & Balances</h3>
+            <p className="expenses-tab-settlements-sub">
               Track who owes whom, mark payments sent, and confirm receipt in BDT.
             </p>
           </div>
@@ -200,50 +207,50 @@ export function ExpensesTab({ tripId, trip, expenses, members, onRefresh }: Expe
         </div>
 
         {/* Trip-level summary of settled vs outstanding in BDT */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '14px', marginBottom: '16px' }}>
-          <div style={{ background: '#f8fafc', padding: '14px 18px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-            <span style={{ fontSize: '11px', textTransform: 'uppercase', color: '#64748b', fontWeight: 600, letterSpacing: '0.4px' }}>
+        <div className="expenses-tab-summary-grid">
+          <div className="expenses-tab-stat-card">
+            <span className="expenses-tab-stat-label">
               Settled (Confirmed)
             </span>
-            <strong style={{ display: 'block', fontSize: '22px', color: '#059669', margin: '4px 0' }}>
+            <strong className="expenses-tab-stat-value positive">
               ৳ {settledTotal.toLocaleString()}
             </strong>
-            <small style={{ color: '#059669', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <small className="expenses-tab-stat-sub positive">
               <CheckCircle2 size={12} /> Confirmed by creditor
             </small>
           </div>
 
-          <div style={{ background: '#f8fafc', padding: '14px 18px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-            <span style={{ fontSize: '11px', textTransform: 'uppercase', color: '#64748b', fontWeight: 600, letterSpacing: '0.4px' }}>
+          <div className="expenses-tab-stat-card">
+            <span className="expenses-tab-stat-label">
               Outstanding Balance
             </span>
-            <strong style={{ display: 'block', fontSize: '22px', color: outstandingTotal > 0 ? '#d97706' : '#64748b', margin: '4px 0' }}>
+            <strong className={`expenses-tab-stat-value ${outstandingTotal > 0 ? "warning" : ""}`}>
               ৳ {outstandingTotal.toLocaleString()}
             </strong>
-            <small style={{ color: outstandingTotal > 0 ? '#d97706' : '#64748b', fontSize: '11px' }}>
+            <small className={`expenses-tab-stat-sub ${outstandingTotal > 0 ? "warning" : ""}`}>
               {paidAwaitingConfirmTotal > 0
                 ? `৳ ${paidAwaitingConfirmTotal.toLocaleString()} awaiting confirmation`
                 : pendingTotal > 0
                 ? `৳ ${pendingTotal.toLocaleString()} pending payment`
-                : 'All settlements confirmed'}
+                : "All settlements confirmed"}
             </small>
           </div>
 
-          <div style={{ background: '#f8fafc', padding: '14px 18px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-            <span style={{ fontSize: '11px', textTransform: 'uppercase', color: '#64748b', fontWeight: 600, letterSpacing: '0.4px' }}>
+          <div className="expenses-tab-stat-card">
+            <span className="expenses-tab-stat-label">
               Total Settlements
             </span>
-            <strong style={{ display: 'block', fontSize: '22px', color: '#1e293b', margin: '4px 0' }}>
+            <strong className="expenses-tab-stat-value">
               ৳ {(settledTotal + outstandingTotal).toLocaleString()}
             </strong>
-            <small style={{ color: '#64748b', fontSize: '11px' }}>
-              {settlements.length} {settlements.length === 1 ? 'settlement recorded' : 'settlements recorded'}
+            <small className="expenses-tab-stat-sub">
+              {settlements.length} {settlements.length === 1 ? "settlement recorded" : "settlements recorded"}
             </small>
           </div>
         </div>
 
         {settlementError && (
-          <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '10px 14px', borderRadius: '6px', fontSize: '12px', marginBottom: '14px' }}>
+          <div className="error-box expenses-tab-error">
             {settlementError}
           </div>
         )}
@@ -263,91 +270,76 @@ export function ExpensesTab({ tripId, trip, expenses, members, onRefresh }: Expe
               {settlements.map((s) => {
                 const isDebtor = currentUser?.id === s.from_user_id
                 const isCreditor = currentUser?.id === s.to_user_id
-                const statusUpper = String(s.status || '').toUpperCase()
+                const statusUpper = String(s.status || "").toUpperCase()
 
                 return (
                   <tr key={s.id}>
                     <td>
                       <strong>{s.from_user_name}</strong>
-                      {isDebtor && <span className="badge badge-blue sm" style={{ marginLeft: '6px', fontSize: '10px' }}>You (Debtor)</span>}
+                      {isDebtor && <span className="badge badge-blue sm expenses-tab-badge-tag">You (Debtor)</span>}
                     </td>
                     <td>
                       <strong>{s.to_user_name}</strong>
-                      {isCreditor && <span className="badge badge-green sm" style={{ marginLeft: '6px', fontSize: '10px' }}>You (Creditor)</span>}
+                      {isCreditor && <span className="badge badge-green sm expenses-tab-badge-tag">You (Creditor)</span>}
                     </td>
                     <td>
                       <strong>৳ {Number(s.amount).toLocaleString()}</strong>
                     </td>
                     <td>
-                      <span
-                        className={`badge ${
-                          statusUpper === 'CONFIRMED'
-                            ? 'badge-green'
-                            : statusUpper === 'PAID'
-                            ? 'badge-blue'
-                            : statusUpper === 'CANCELLED'
-                            ? 'badge-gray'
-                            : 'badge-orange'
-                        }`}
-                        style={
-                          statusUpper === 'CONFIRMED'
-                            ? { background: '#d1fae5', color: '#065f46', border: '1px solid #a7f3d0' }
-                            : statusUpper === 'PAID'
-                            ? { background: '#dbeafe', color: '#1e40af', border: '1px solid #bfdbfe' }
-                            : statusUpper === 'CANCELLED'
-                            ? { background: '#f1f5f9', color: '#64748b', border: '1px solid #e2e8f0' }
-                            : { background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a' }
+                      <StatusBadge
+                        status={statusUpper}
+                        variant={
+                          statusUpper === "CONFIRMED"
+                            ? "green"
+                            : statusUpper === "PAID"
+                            ? "blue"
+                            : statusUpper === "CANCELLED"
+                            ? "purple"
+                            : "orange"
                         }
-                      >
-                        {statusUpper}
-                      </span>
+                      />
                     </td>
                     <td>
-                      {/* Only the right user sees each button:
-                          - Debtor sees "Mark as paid" when PENDING
-                          - Creditor sees "Confirm received" when PAID */}
-                      {statusUpper === 'PENDING' && isDebtor && (
+                      {statusUpper === "PENDING" && isDebtor && (
                         <button
-                          className="primary-btn sm"
-                          style={{ height: '30px', padding: '0 12px', fontSize: '11px', whiteSpace: 'nowrap' }}
+                          className="primary-btn sm expenses-tab-action-btn"
                           onClick={() => handleMarkPaid(s.id)}
                           disabled={updatingId === s.id}
                         >
-                          {updatingId === s.id ? 'Updating…' : 'Mark as paid'}
+                          {updatingId === s.id ? "Updating…" : "Mark as paid"}
                         </button>
                       )}
 
-                      {statusUpper === 'PAID' && isCreditor && (
+                      {statusUpper === "PAID" && isCreditor && (
                         <button
-                          className="primary-btn sm"
-                          style={{ height: '30px', padding: '0 12px', fontSize: '11px', background: '#059669', borderColor: '#059669', whiteSpace: 'nowrap' }}
+                          className="primary-btn sm expenses-tab-action-btn success"
                           onClick={() => handleConfirmReceived(s.id)}
                           disabled={updatingId === s.id}
                         >
-                          {updatingId === s.id ? 'Confirming…' : 'Confirm received'}
+                          {updatingId === s.id ? "Confirming…" : "Confirm received"}
                         </button>
                       )}
 
-                      {statusUpper === 'PENDING' && !isDebtor && (
-                        <small style={{ color: '#d97706', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      {statusUpper === "PENDING" && !isDebtor && (
+                        <small className="expenses-tab-status-awaiting-warning">
                           <Clock size={12} /> Awaiting payment
                         </small>
                       )}
 
-                      {statusUpper === 'PAID' && !isCreditor && (
-                        <small style={{ color: '#2563eb', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      {statusUpper === "PAID" && !isCreditor && (
+                        <small className="expenses-tab-status-awaiting-info">
                           <Clock size={12} /> Awaiting confirmation
                         </small>
                       )}
 
-                      {statusUpper === 'CONFIRMED' && (
-                        <span style={{ color: '#059669', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 500 }}>
+                      {statusUpper === "CONFIRMED" && (
+                        <span className="expenses-tab-status-confirmed">
                           <Check size={13} /> Settled
                         </span>
                       )}
 
-                      {statusUpper === 'CANCELLED' && (
-                        <small style={{ color: '#94a3b8', fontSize: '11px' }}>Cancelled</small>
+                      {statusUpper === "CANCELLED" && (
+                        <small className="expenses-tab-status-cancelled">Cancelled</small>
                       )}
                     </td>
                   </tr>
@@ -355,7 +347,7 @@ export function ExpensesTab({ tripId, trip, expenses, members, onRefresh }: Expe
               })}
               {!settlements.length && (
                 <tr>
-                  <td colSpan={5} style={{ textAlign: 'center', padding: '24px', color: '#889' }}>
+                  <td colSpan={5} className="expenses-tab-empty-table-cell">
                     No settlements recorded yet. Click "Record payment" to log a balance settlement.
                   </td>
                 </tr>
@@ -415,4 +407,3 @@ export function ExpensesTab({ tripId, trip, expenses, members, onRefresh }: Expe
 }
 
 export default ExpensesTab
-

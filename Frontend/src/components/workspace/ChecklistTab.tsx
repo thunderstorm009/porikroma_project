@@ -1,21 +1,21 @@
-import { useState } from 'react'
-import { Plus, Trash2 } from 'lucide-react'
-import { api } from '../../api'
-import type { WorkspaceData } from '../../types'
+import { useState } from "react"
+import { Plus, Trash2 } from "lucide-react"
+import { api } from "../../api"
+import type { WorkspaceData } from "../../types"
 
 export interface ChecklistTabProps {
   tripId: string
-  items: WorkspaceData['checklist']
+  items: WorkspaceData["checklist"]
   onRefresh: () => void
 }
 
 export function ChecklistTab({ tripId, items, onRefresh }: ChecklistTabProps) {
-  const [title, setTitle] = useState('')
-  const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('all')
+  const [title, setTitle] = useState("")
+  const [filter, setFilter] = useState<"all" | "pending" | "completed">("all")
 
   const toggle = async (id: string, completed: boolean) => {
     await api(`/api/trips/${tripId}/checklist/${id}`, {
-      method: 'PATCH',
+      method: "PATCH",
       body: JSON.stringify({ completed: !completed }),
     })
     onRefresh()
@@ -24,21 +24,21 @@ export function ChecklistTab({ tripId, items, onRefresh }: ChecklistTabProps) {
   const add = async () => {
     if (!title.trim()) return
     await api(`/api/trips/${tripId}/checklist`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify({ title: title.trim() }),
     })
-    setTitle('')
+    setTitle("")
     onRefresh()
   }
 
   const deleteItem = async (id: string) => {
-    await api(`/api/trips/${tripId}/checklist/${id}`, { method: 'DELETE' })
+    await api(`/api/trips/${tripId}/checklist/${id}`, { method: "DELETE" })
     onRefresh()
   }
 
   const visible = items.filter((i) => {
-    if (filter === 'pending') return !i.completed
-    if (filter === 'completed') return i.completed
+    if (filter === "pending") return !i.completed
+    if (filter === "completed") return i.completed
     return true
   })
 
@@ -49,24 +49,24 @@ export function ChecklistTab({ tripId, items, onRefresh }: ChecklistTabProps) {
           <h2>Packing & preparation checklist</h2>
           <p>{items.filter((i) => i.completed).length} of {items.length} items packed</p>
         </div>
-        <div className="tabs" style={{ margin: 0 }}>
-          <button className={filter === 'all' ? 'tab active' : 'tab'} onClick={() => setFilter('all')}>All</button>
-          <button className={filter === 'pending' ? 'tab active' : 'tab'} onClick={() => setFilter('pending')}>Pending</button>
-          <button className={filter === 'completed' ? 'tab active' : 'tab'} onClick={() => setFilter('completed')}>Done</button>
+        <div className="tabs checklist-tab-tabs">
+          <button className={filter === "all" ? "tab active" : "tab"} onClick={() => setFilter("all")}>All</button>
+          <button className={filter === "pending" ? "tab active" : "tab"} onClick={() => setFilter("pending")}>Pending</button>
+          <button className={filter === "completed" ? "tab active" : "tab"} onClick={() => setFilter("completed")}>Done</button>
         </div>
       </div>
 
-      <div className="inline-add" style={{ margin: '16px 0' }}>
-        <input placeholder="Add item (e.g. Waterproof hiking boots)..." value={title} onChange={(e) => setTitle(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && add()} />
+      <div className="inline-add checklist-tab-add">
+        <input placeholder="Add item (e.g. Waterproof hiking boots)..." value={title} onChange={(e) => setTitle(e.target.value)} onKeyDown={(e) => e.key === "Enter" && add()} />
         <button className="primary-btn" onClick={add}><Plus size={15} /> Add</button>
       </div>
 
       <div>
         {visible.map((item) => (
-          <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #edf0ea' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', margin: 0 }}>
+          <div key={item.id} className="checklist-tab-row">
+            <label className="checklist-tab-label">
               <input type="checkbox" checked={item.completed} onChange={() => toggle(item.id, item.completed)} />
-              <span style={{ textDecoration: item.completed ? 'line-through' : 'none', color: item.completed ? '#889' : 'inherit' }}>
+              <span className={`checklist-tab-text ${item.completed ? "completed" : ""}`}>
                 {item.title}
               </span>
             </label>
@@ -74,7 +74,7 @@ export function ChecklistTab({ tripId, items, onRefresh }: ChecklistTabProps) {
           </div>
         ))}
         {!visible.length && (
-          <div style={{ padding: '24px', textAlign: 'center', color: '#889' }}>No checklist items in this view.</div>
+          <div className="checklist-tab-empty">No checklist items in this view.</div>
         )}
       </div>
     </div>

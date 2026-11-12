@@ -1,31 +1,31 @@
-import { useState } from 'react'
-import { Plus, MapPin, Trash2, X } from 'lucide-react'
-import { api } from '../../api'
-import type { WorkspaceData } from '../../types'
+import { useState } from "react"
+import { Plus, MapPin, Trash2, X } from "lucide-react"
+import { api } from "../../api"
+import type { WorkspaceData } from "../../types"
 
 export interface ItineraryTabProps {
   tripId: string
-  items: WorkspaceData['itinerary']
+  items: WorkspaceData["itinerary"]
   onRefresh: () => void
 }
 
 export function ItineraryTab({ tripId, items, onRefresh }: ItineraryTabProps) {
   const [showModal, setShowModal] = useState(false)
-  const [form, setForm] = useState({ dayDate: new Date().toISOString().slice(0, 10), title: '', location: '', notes: '' })
+  const [form, setForm] = useState({ dayDate: new Date().toISOString().slice(0, 10), title: "", location: "", notes: "" })
 
   const add = async () => {
     if (!form.title.trim()) return
     await api(`/api/trips/${tripId}/itinerary`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify(form),
     })
     setShowModal(false)
-    setForm({ dayDate: new Date().toISOString().slice(0, 10), title: '', location: '', notes: '' })
+    setForm({ dayDate: new Date().toISOString().slice(0, 10), title: "", location: "", notes: "" })
     onRefresh()
   }
 
   const deleteItem = async (id: string) => {
-    await api(`/api/trips/${tripId}/itinerary/${id}`, { method: 'DELETE' })
+    await api(`/api/trips/${tripId}/itinerary/${id}`, { method: "DELETE" })
     onRefresh()
   }
 
@@ -39,20 +39,24 @@ export function ItineraryTab({ tripId, items, onRefresh }: ItineraryTabProps) {
         <button className="primary-btn" onClick={() => setShowModal(true)}><Plus size={16} /> Add stop</button>
       </div>
 
-      <div style={{ marginTop: '16px' }}>
+      <div className="itinerary-tab-list">
         {items.map((item) => (
-          <div className="attraction-row" key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div className="attraction-row itinerary-tab-row" key={item.id}>
             <div>
-              <span className="eyebrow" style={{ color: 'var(--green)' }}>{item.day_date}</span>
-              <strong style={{ fontSize: '14px', margin: '4px 0' }}>{item.title}</strong>
-              {item.location && <small style={{ color: '#6d7770', display: 'flex', alignItems: 'center', gap: '4px' }}><MapPin size={12} /> {item.location}</small>}
-              {item.notes && <p style={{ fontSize: '11px', color: '#7a857e', marginTop: '4px' }}>{item.notes}</p>}
+              <span className="eyebrow">{item.day_date}</span>
+              <strong className="itinerary-tab-title">{item.title}</strong>
+              {item.location && (
+                <small className="itinerary-tab-location">
+                  <MapPin size={12} /> {item.location}
+                </small>
+              )}
+              {item.notes && <p className="itinerary-tab-notes">{item.notes}</p>}
             </div>
             <button className="icon-btn" onClick={() => deleteItem(item.id)} title="Delete stop"><Trash2 size={15} /></button>
           </div>
         ))}
         {!items.length && (
-          <div style={{ padding: '30px', textAlign: 'center', color: '#889' }}>No itinerary stops yet. Add your first day!</div>
+          <div className="itinerary-tab-empty">No itinerary stops yet. Add your first day!</div>
         )}
       </div>
 
