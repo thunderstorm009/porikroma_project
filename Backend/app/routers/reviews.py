@@ -22,7 +22,7 @@ async def check_is_trip_member(user_id: uuid.UUID, trip_id: uuid.UUID, db: Datab
         UNION
         SELECT 1 FROM group_members gm
         JOIN groups g ON g.id = gm.group_id
-        WHERE g.trip_id = $1 AND gm.user_id = $2 AND gm.status = 'APPROVED'
+        WHERE g.trip_id = $1 AND gm.user_id = $2
         LIMIT 1
         """,
         trip_id,
@@ -92,6 +92,42 @@ async def list_reviews(
 # -------------------------------------------------------------
 # 2. TRAVELER-TO-TRAVELER PEER REVIEWS
 # -------------------------------------------------------------
+@peer_router.get("/api/users/{id}/reviewable-trips")
+async def list_reviewable_trips(
+    id: str,
+    current_user: dict = Depends(get_current_user),
+    db: Database = Depends(get_db),
+):
+    """List completed trips the current traveler shared with this profile and has not reviewed yet."""
+    try:
+        reviewee_uuid = uuid.UUID(id)
+        reviewer_uuid = uuid.UUID(str(current_user["id"]))
+    except (ValueError, TypeError):
+        return JSONResponse(status_code=404, content={"error": "User not found"})
+    if reviewee_uuid == reviewer_uuid:
+        return []
+    return [record_to_dict(row) for row in await db.fetch(
+        """
+        SELECT t.id, t.name
+        FROM trips t
+        WHERE t.status = 'COMPLETED'
+          AND (
+            (t.creator_id = $1 AND (t.creator_id = $2 OR EXISTS (SELECT 1 FROM trip_members m WHERE m.trip_id = t.id AND m.user_id = $2) OR EXISTS (SELECT 1 FROM group_members gm JOIN groups g ON g.id = gm.group_id WHERE g.trip_id = t.id AND gm.user_id = $2)))
+            OR
+            (t.creator_id = $2 AND (t.creator_id = $1 OR EXISTS (SELECT 1 FROM trip_members m WHERE m.trip_id = t.id AND m.user_id = $1) OR EXISTS (SELECT 1 FROM group_members gm JOIN groups g ON g.id = gm.group_id WHERE g.trip_id = t.id AND gm.user_id = $1)))
+            OR
+            (EXISTS (SELECT 1 FROM trip_members m WHERE m.trip_id = t.id AND m.user_id = $1) AND (t.creator_id = $2 OR EXISTS (SELECT 1 FROM trip_members m WHERE m.trip_id = t.id AND m.user_id = $2) OR EXISTS (SELECT 1 FROM group_members gm JOIN groups g ON g.id = gm.group_id WHERE g.trip_id = t.id AND gm.user_id = $2)))
+            OR
+            (EXISTS (SELECT 1 FROM group_members gm JOIN groups g ON g.id = gm.group_id WHERE g.trip_id = t.id AND gm.user_id = $1) AND (t.creator_id = $2 OR EXISTS (SELECT 1 FROM trip_members m WHERE m.trip_id = t.id AND m.user_id = $2) OR EXISTS (SELECT 1 FROM group_members gm JOIN groups g ON g.id = gm.group_id WHERE g.trip_id = t.id AND gm.user_id = $2)))
+          )
+          AND NOT EXISTS (SELECT 1 FROM peer_reviews pr WHERE pr.trip_id = t.id AND pr.reviewer_id = $1 AND pr.reviewee_id = $2)
+        ORDER BY t.end_date DESC NULLS LAST
+        """,
+        reviewer_uuid,
+        reviewee_uuid,
+    )]
+
+
 @peer_router.post("/api/peer-reviews", status_code=status.HTTP_201_CREATED)
 @peer_router.post("/api/reviews/peer", status_code=status.HTTP_201_CREATED)
 async def create_peer_review(
@@ -273,7 +309,7 @@ async def list_pending_peer_reviews(
           UNION
           SELECT gm.user_id FROM group_members gm
           JOIN groups g ON g.id = gm.group_id
-          WHERE g.trip_id = $1 AND gm.user_id <> $2 AND gm.status = 'APPROVED'
+          WHERE g.trip_id = $1 AND gm.user_id <> $2
         )
         SELECT tc.user_id AS id, u.name, u.email, coalesce(p.avatar_url, '') AS avatar_url
         FROM trip_companions tc

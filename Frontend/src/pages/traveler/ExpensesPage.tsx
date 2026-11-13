@@ -24,10 +24,31 @@ export function ExpensesPage() {
     }
   } | null>(null)
   const [search, setSearch] = useState('')
+  const [annualBudget, setAnnualBudget] = useState(0)
+  const [budgetDraft, setBudgetDraft] = useState('')
+  const [budgetMessage, setBudgetMessage] = useState('')
 
   useEffect(() => {
     api<typeof data>('/api/expenses/overview').then(setData).catch(() => undefined)
+    api<{ amount: number }>('/api/expenses/annual-budget').then((result) => {
+      setAnnualBudget(Number(result.amount) || 0)
+      setBudgetDraft(String(Number(result.amount) || ''))
+    }).catch(() => undefined)
   }, [])
+
+  const saveAnnualBudget = async () => {
+    const amount = Number(budgetDraft)
+    if (!Number.isFinite(amount) || amount < 0) { setBudgetMessage('Enter a valid yearly amount.'); return }
+    try {
+      const result = await api<{ amount: number }>('/api/expenses/annual-budget', {
+        method: 'PUT', body: JSON.stringify({ year: new Date().getFullYear(), amount: Math.round(amount) }),
+      })
+      setAnnualBudget(result.amount)
+      setBudgetMessage('Yearly travel budget saved.')
+    } catch (error) {
+      setBudgetMessage(error instanceof Error ? error.message : 'Could not save budget.')
+    }
+  }
 
   const expenses = data?.expenses || []
   const visible = expenses.filter((e) =>
@@ -78,6 +99,20 @@ export function ExpensesPage() {
           </div>
         </div>
       </div>
+
+      <section className="panel" style={{ marginTop: '20px' }}>
+        <div className="panel-heading">
+          <div><h2>Yearly travel budget · {new Date().getFullYear()}</h2><p>Set an annual cap and compare it with the actual trip spending recorded below.</p></div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'end', gap: '12px', flexWrap: 'wrap' }}>
+          <label style={{ minWidth: '220px' }}>Annual cap (BDT)
+            <input type="number" min="0" step="500" value={budgetDraft} onChange={(event) => setBudgetDraft(event.target.value)} placeholder="e.g. 100000" />
+          </label>
+          <button className="primary-btn" onClick={saveAnnualBudget}>Save yearly cap</button>
+          {budgetMessage && <span className="muted">{budgetMessage}</span>}
+        </div>
+        {annualBudget > 0 && <p style={{ marginBottom: 0 }}>Spent this year: ৳ {expenses.filter((expense) => new Date(expense.expense_date).getFullYear() === new Date().getFullYear()).reduce((sum, expense) => sum + Number(expense.amount), 0).toLocaleString()} of ৳ {annualBudget.toLocaleString()} annual cap</p>}
+      </section>
 
 
       <div className="expense-toolbar">
