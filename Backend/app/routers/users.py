@@ -60,18 +60,7 @@ async def get_my_profile(
         """,
         user_uuid,
     )
-    profile = record_to_dict(row)
-    profile["admin_warnings"] = [record_to_dict(item) for item in await db.fetch(
-        """
-        SELECT ma.id, ma.note, ma.created_at
-        FROM moderation_actions ma
-        JOIN user_reports ur ON ur.id = ma.report_id
-        WHERE ur.reported_user_id = $1 AND ma.action = 'WARNING'
-        ORDER BY ma.created_at DESC
-        """,
-        user_uuid,
-    )]
-    return profile
+    return record_to_dict(row)
 
 
 @users_router.get("/{id}/profile")

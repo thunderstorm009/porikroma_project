@@ -58,10 +58,9 @@ def test_init_schema_applies_schema_sql_idempotently():
 
         success = await test_db.init_schema()
         assert success is True
-        # Base schema plus the four idempotent checked-in migrations.
-        assert mock_conn.execute.await_count == 5
+        mock_conn.execute.assert_awaited_once()
 
-        executed_sql = mock_conn.execute.await_args_list[0].args[0]
+        executed_sql = mock_conn.execute.call_args[0][0]
         assert "CREATE TABLE IF NOT EXISTS users" in executed_sql
         assert "CREATE TABLE IF NOT EXISTS trips" in executed_sql
         assert "CREATE TABLE IF NOT EXISTS destinations" in executed_sql
@@ -259,7 +258,7 @@ def test_seed_runs_twice_without_errors_or_duplicates():
 
             assert initial_users_count == 4
             assert initial_dest_count == 7
-            assert initial_trips_count == 4
+            assert initial_trips_count == 3
             assert initial_groups_count == 2
             assert initial_tours_count == 2
 

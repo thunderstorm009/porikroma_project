@@ -58,28 +58,6 @@ async def check_trip_access(
     return row is not None
 
 
-async def stamp_completed_trip(trip_id: uuid.UUID, db: Database) -> None:
-    """Add the completed destination to every trip participant's passport once."""
-    await db.execute(
-        """
-        INSERT INTO passport_entries (user_id, destination_id, visited_on, visibility)
-        SELECT participants.user_id, t.destination_id, t.end_date, 'PRIVATE'
-        FROM trips t
-        CROSS JOIN LATERAL (
-          SELECT t.creator_id AS user_id
-          UNION
-          SELECT tm.user_id FROM trip_members tm WHERE tm.trip_id = t.id
-          UNION
-          SELECT gm.user_id FROM group_members gm JOIN groups g ON g.id = gm.group_id WHERE g.trip_id = t.id
-        ) participants
-        WHERE t.id = $1
-        ON CONFLICT (user_id, destination_id)
-        DO UPDATE SET visited_on = coalesce(passport_entries.visited_on, EXCLUDED.visited_on)
-        """,
-        trip_id,
-    )
-
-
 async def check_trip_read_access(
     user_id: str | uuid.UUID,
     trip_id: uuid.UUID,
@@ -135,8 +113,7 @@ async def list_trips(
         WHERE (
           ($4::uuid IS NOT NULL AND $4 <> $1 AND (t.visibility = 'PUBLIC' OR EXISTS (SELECT 1 FROM trip_members tm WHERE tm.trip_id = t.id AND tm.user_id = $1)))
           OR ($3::text = 'PUBLIC' AND t.visibility = 'PUBLIC')
-          OR (t.creator_id = $1 OR EXISTS (SELECT 1 FROM trip_members tm WHERE tm.trip_id = t.id AND tm.user_id = $1)
-              OR EXISTS (SELECT 1 FROM group_members gm JOIN groups g ON g.id = gm.group_id WHERE g.trip_id = t.id AND gm.user_id = $1))
+          OR (t.creator_id = $1 OR EXISTS (SELECT 1 FROM trip_members tm WHERE tm.trip_id = t.id AND tm.user_id = $1))
         )
           AND ($2::text IS NULL OR t.status = $2)
           AND ($3::text IS NULL OR t.visibility = $3)
@@ -320,8 +297,6 @@ async def update_trip_status(
             status_code=status.HTTP_404_NOT_FOUND,
             content={"error": "Trip not found or not owned by you"},
         )
-    if data.status == "COMPLETED":
-        await stamp_completed_trip(t_uuid, db)
     return record_to_dict(row)
 
 
