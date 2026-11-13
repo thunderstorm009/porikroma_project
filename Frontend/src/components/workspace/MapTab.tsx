@@ -189,13 +189,13 @@ export function MapTab({ tripId, destinationName, places, itinerary = [], onRefr
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
           <button className="primary-btn" onClick={handleOpenAddModal}>
-            <Plus size={15} /> Add place
+            <Plus size={17} /> Add place
           </button>
         </div>
       </div>
 
-      <div style={{ margin: '8px 0', fontSize: '12px', color: '#556557', display: 'flex', alignItems: 'center', gap: '6px' }}>
-        <Compass size={14} color="#15803d" />
+      <div style={{ margin: '8px 0 12px', fontSize: '13px', color: '#556557', display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <Compass size={16} color="#15803d" />
         <span>Click anywhere on the map to pin a new place, or click existing markers to view details.</span>
       </div>
 
@@ -208,7 +208,7 @@ export function MapTab({ tripId, destinationName, places, itinerary = [], onRefr
           borderRadius: '10px',
           overflow: 'hidden',
           position: 'relative',
-          margin: '12px 0 20px',
+          margin: '12px 0 24px',
           border: '1px solid #c8d7c4',
           zIndex: 0,
         }}
@@ -251,18 +251,18 @@ export function MapTab({ tripId, destinationName, places, itinerary = [], onRefr
               <Popup>
                 <div style={{ minWidth: '180px', fontFamily: 'inherit' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                    <span style={{ background: '#1e3a2b', color: '#fff', fontSize: '10px', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>
+                    <span style={{ background: '#1e3a2b', color: '#fff', fontSize: '11px', padding: '2px 7px', borderRadius: '4px', fontWeight: 'bold' }}>
                       Stop #{idx + 1}
                     </span>
-                    <small style={{ color: '#6d7770' }}>{w.item.day_date}</small>
+                    <small style={{ color: '#506155', fontSize: '12px' }}>{w.item.day_date}</small>
                   </div>
-                  <strong style={{ fontSize: '13px', display: 'block', color: '#1a3324' }}>{w.item.title}</strong>
+                  <strong style={{ fontSize: '13.5px', display: 'block', color: '#1a3324' }}>{w.item.title}</strong>
                   {w.item.location && (
-                    <p style={{ fontSize: '11px', color: '#4d5d52', margin: '3px 0', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                      <MapPin size={11} /> {w.item.location}
+                    <p style={{ fontSize: '12px', color: '#4d5d52', margin: '3px 0', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <MapPin size={13} /> {w.item.location}
                     </p>
                   )}
-                  {w.item.notes && <p style={{ fontSize: '11px', color: '#6d7770', margin: '4px 0 0' }}>{w.item.notes}</p>}
+                  {w.item.notes && <p style={{ fontSize: '12px', color: '#506155', margin: '4px 0 0' }}>{w.item.notes}</p>}
                 </div>
               </Popup>
             </Marker>
@@ -277,10 +277,10 @@ export function MapTab({ tripId, destinationName, places, itinerary = [], onRefr
             >
               <Popup>
                 <div style={{ minWidth: '190px', fontFamily: 'inherit' }}>
-                  <span className="badge badge-green" style={{ fontSize: '10px', padding: '2px 6px' }}>{p.category}</span>
-                  <strong style={{ display: 'block', fontSize: '13px', margin: '4px 0 2px', color: '#1a3324' }}>{p.name}</strong>
-                  {p.notes && <p style={{ fontSize: '11px', color: '#4d5d52', margin: '2px 0 8px' }}>{p.notes}</p>}
-                  <div style={{ fontSize: '9px', color: '#889988', margin: '4px 0' }}>
+                  <span className="badge badge-green" style={{ fontSize: '11px', padding: '2px 7px' }}>{p.category}</span>
+                  <strong style={{ display: 'block', fontSize: '13.5px', margin: '4px 0 2px', color: '#1a3324' }}>{p.name}</strong>
+                  {p.notes && <p style={{ fontSize: '12px', color: '#4d5d52', margin: '2px 0 8px' }}>{p.notes}</p>}
+                  <div style={{ fontSize: '12px', color: '#506155', margin: '4px 0' }}>
                     Lat: {p.lat.toFixed(4)}, Lng: {p.lng.toFixed(4)}
                   </div>
                   <button
@@ -289,17 +289,17 @@ export function MapTab({ tripId, destinationName, places, itinerary = [], onRefr
                       background: '#fee2e2',
                       color: '#b91c1c',
                       border: 'none',
-                      padding: '4px 8px',
+                      padding: '5px 9px',
                       borderRadius: '4px',
                       cursor: 'pointer',
-                      fontSize: '11px',
+                      fontSize: '12px',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '4px',
                       marginTop: '6px',
                     }}
                   >
-                    <Trash2 size={12} /> Remove place
+                    <Trash2 size={14} /> Remove place
                   </button>
                 </div>
               </Popup>
@@ -320,18 +320,18 @@ export function MapTab({ tripId, destinationName, places, itinerary = [], onRefr
             <span>Itinerary Route ({itineraryWaypoints.length} stops)</span>
           </div>
         )}
-        <div style={{ marginLeft: 'auto', color: '#6d7770', fontSize: '11px' }}>
+        <div style={{ marginLeft: 'auto', color: '#506155', fontSize: '12px' }}>
           Powered by OpenStreetMap
         </div>
       </div>
 
       {/* Saved Places List */}
-      <div style={{ marginTop: '20px' }}>
-        <h3 style={{ fontSize: '14px', fontWeight: '600', color: '#2d4b3b', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <Layers size={16} /> Saved Points of Interest
+      <div style={{ marginTop: '24px' }}>
+        <h3 style={{ fontSize: '15px', fontWeight: '600', color: '#2d4b3b', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <Layers size={18} /> Saved Points of Interest
         </h3>
         {resolvedPlaces.length === 0 ? (
-          <p className="muted" style={{ fontSize: '12px', padding: '12px 0' }}>
+          <p className="muted" style={{ fontSize: '13.5px', padding: '16px 0' }}>
             No custom places pinned yet. Click on the map or the &ldquo;Add place&rdquo; button above to pin beaches, tea stalls, viewpoints, or dining spots.
           </p>
         ) : (
@@ -339,14 +339,14 @@ export function MapTab({ tripId, destinationName, places, itinerary = [], onRefr
             <div className="attraction-row" key={p.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
                 <span className="badge badge-green">{p.category}</span>
-                <strong style={{ fontSize: '13px', margin: '4px 0' }}>{p.name}</strong>
-                {p.notes && <p style={{ fontSize: '11px', color: '#6d7770', margin: 0 }}>{p.notes}</p>}
-                <small style={{ fontSize: '10px', color: '#8d9c8c' }}>
+                <strong style={{ fontSize: '14.5px', margin: '4px 0' }}>{p.name}</strong>
+                {p.notes && <p style={{ fontSize: '13px', color: '#506155', margin: 0 }}>{p.notes}</p>}
+                <small style={{ fontSize: '12px', color: '#506155' }}>
                   ({p.lat.toFixed(4)}, {p.lng.toFixed(4)})
                 </small>
               </div>
-              <button className="icon-btn" onClick={() => handleDeletePlace(p.id)} title="Delete place">
-                <Trash2 size={14} />
+              <button className="icon-btn" onClick={() => handleDeletePlace(p.id)} title="Delete place" aria-label="Delete place">
+                <Trash2 size={16} />
               </button>
             </div>
           ))
@@ -357,18 +357,18 @@ export function MapTab({ tripId, destinationName, places, itinerary = [], onRefr
       {showModal && (
         <div className="modal-backdrop" onClick={() => setShowModal(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setShowModal(false)}>
+            <button className="modal-close" onClick={() => setShowModal(false)} aria-label="Close pin place modal">
               <X size={18} />
             </button>
             <h2>Pin a place of interest</h2>
-            <p style={{ fontSize: '12px', color: '#6d7770', margin: '-4px 0 12px' }}>
+            <p style={{ fontSize: '13.5px', color: '#4e5e52', margin: '2px 0 16px', lineHeight: 1.5 }}>
               {clickedLat && clickedLng
                 ? `Pinned at coordinates: ${clickedLat.toFixed(4)}, ${clickedLng.toFixed(4)}`
                 : `Adding to ${destinationName}`}
             </p>
 
             {actionError && (
-              <p style={{ color: '#dc2626', fontSize: '12px', background: '#fee2e2', padding: '6px 10px', borderRadius: '4px' }}>
+              <p style={{ color: '#dc2626', fontSize: '13.5px', background: '#fee2e2', padding: '8px 12px', borderRadius: '6px' }}>
                 {actionError}
               </p>
             )}

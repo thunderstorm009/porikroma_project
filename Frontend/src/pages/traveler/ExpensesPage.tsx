@@ -50,31 +50,31 @@ export function ExpensesPage() {
       <div className="expense-summary detailed-expense-summary">
         <div>
           <span>Total spent</span>
-          <strong>৳ {(data?.totalSpent || 24500).toLocaleString()}</strong>
+          <strong>৳ {(data?.totalSpent ?? 0).toLocaleString()}</strong>
           <small className="positive">Across all your trips</small>
         </div>
         <div>
           <span>Settled payments</span>
-          <strong>৳ {(data?.totalSettled || 0).toLocaleString()}</strong>
+          <strong>৳ {(data?.totalSettled ?? 0).toLocaleString()}</strong>
           <small style={{ color: '#059669' }}>Confirmed received</small>
         </div>
         <div>
           <span>Outstanding balance</span>
-          <strong>৳ {(data?.totalOutstanding || 0).toLocaleString()}</strong>
+          <strong>৳ {(data?.totalOutstanding ?? 0).toLocaleString()}</strong>
           <small style={{ color: '#d97706' }}>Pending or awaiting confirmation</small>
         </div>
         <div>
           <span>Budget planned</span>
-          <strong>৳ {(data?.totalBudget || 60700).toLocaleString()}</strong>
+          <strong>৳ {(data?.totalBudget ?? 0).toLocaleString()}</strong>
           <small>Total budget target</small>
         </div>
         <div className="budget-progress">
           <div className="budget-label">
             <span>Overall Budget Utilization</span>
-            <strong>{data?.totalBudget ? Math.round(((data.totalSpent || 0) / data.totalBudget) * 100) : 40}%</strong>
+            <strong>{data?.totalBudget ? Math.round(((data.totalSpent ?? 0) / data.totalBudget) * 100) : 0}%</strong>
           </div>
           <div className="progress">
-            <i style={{ width: `${data?.totalBudget ? Math.min(100, Math.round(((data.totalSpent || 0) / data.totalBudget) * 100)) : 40}%` }} />
+            <i style={{ width: `${data?.totalBudget ? Math.min(100, Math.round(((data.totalSpent ?? 0) / data.totalBudget) * 100)) : 0}%` }} />
           </div>
         </div>
       </div>
@@ -82,7 +82,7 @@ export function ExpensesPage() {
 
       <div className="expense-toolbar">
         <div className="group-filter">
-          <Search size={15} />
+          <Search size={16} />
           <input placeholder="Search expenses by title, category, or traveler..." value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
       </div>
@@ -110,7 +110,9 @@ export function ExpensesPage() {
             ))}
             {!visible.length && (
               <tr>
-                <td colSpan={5} style={{ padding: '24px', textAlign: 'center', color: '#889' }}>No expenses recorded.</td>
+                <td colSpan={5} style={{ padding: '32px 16px', textAlign: 'center', color: '#5a685e', fontSize: '14px' }}>
+                  No expenses recorded.
+                </td>
               </tr>
             )}
           </tbody>

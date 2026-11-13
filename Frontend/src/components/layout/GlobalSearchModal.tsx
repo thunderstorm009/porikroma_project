@@ -54,7 +54,24 @@ export function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModalProps) {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-          <button onClick={onClose}><X size={18} /></button>
+          <button
+            onClick={onClose}
+            aria-label="Close search"
+            style={{
+              width: '36px',
+              height: '36px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: '8px',
+              border: 'none',
+              background: 'transparent',
+              cursor: 'pointer',
+              color: '#5a685e',
+            }}
+          >
+            <X size={18} />
+          </button>
         </div>
         <div className="search-results">
           {searchResults.map((item) => (
@@ -70,11 +87,11 @@ export function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModalProps) {
                 <strong>{item.title}</strong>
                 <small>{item.category}</small>
               </div>
-              <ArrowUpRight size={14} style={{ marginLeft: 'auto', color: '#889' }} />
+              <ArrowUpRight size={16} style={{ marginLeft: 'auto', color: '#5a685e' }} />
             </button>
           ))}
           {searchQuery && !searchResults.length && (
-            <div style={{ padding: '20px', textAlign: 'center', color: '#889', fontSize: '12px' }}>
+            <div style={{ padding: '36px 20px', textAlign: 'center', color: '#5a685e', fontSize: '14px' }}>
               No matching destinations or trips found.
             </div>
           )}

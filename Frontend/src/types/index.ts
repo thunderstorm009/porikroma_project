@@ -194,3 +194,23 @@ export interface PendingReviewCompanion {
   avatar_url?: string
 }
 
+export interface GroupApplication {
+  id: string
+  group_id: string
+  applicant_id: string
+  answers: {
+    experience?: string
+    dietary?: string
+    commitment?: string
+    [key: string]: any
+  }
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'WITHDRAWN'
+  created_at: string
+  applicant_name?: string
+  applicant_email?: string
+  applicant_avatar?: string
+  group_title?: string
+  destination_name?: string
+  organizer_name?: string
+}
+

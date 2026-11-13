@@ -165,19 +165,19 @@ export function PhotosTab({ tripId, trip, onRefresh }: PhotosTabProps) {
       >
         <div>
           <h2 style={{ fontSize: '20px', margin: 0 }}>Trip Photos</h2>
-          <p style={{ margin: '4px 0 0', color: '#6d7770', fontSize: '13px' }}>
+          <p style={{ margin: '4px 0 0', color: '#506155', fontSize: '13px' }}>
             Shared visual expedition album for trip members.
           </p>
         </div>
 
         <button className="primary-btn" onClick={() => setIsAddOpen(true)}>
-          <Plus size={16} /> Add Photo
+          <Plus size={17} /> Add Photo
         </button>
       </div>
 
       {/* Loading state */}
       {loading && (
-        <div style={{ padding: '60px 20px', textAlign: 'center', color: '#6d7770' }}>
+        <div style={{ padding: '60px 20px', textAlign: 'center', color: '#506155' }}>
           <div
             className="avatar"
             style={{
@@ -208,7 +208,7 @@ export function PhotosTab({ tripId, trip, onRefresh }: PhotosTabProps) {
         >
           <AlertCircle size={28} color="#d9534f" style={{ margin: '0 auto 8px' }} />
           <h3 style={{ fontSize: '15px', color: '#a94442' }}>Unable to load photos</h3>
-          <p style={{ fontSize: '12px', color: '#778', margin: '6px 0 14px' }}>{error}</p>
+          <p style={{ fontSize: '13px', color: '#506155', margin: '6px 0 14px' }}>{error}</p>
           <button className="primary-btn small" onClick={loadPhotos}>
             Retry
           </button>
@@ -298,8 +298,9 @@ export function PhotosTab({ tripId, trip, onRefresh }: PhotosTabProps) {
                             setLightboxIndex(index)
                           }}
                           title="Open full preview"
+                          aria-label="Open full preview"
                         >
-                          <Maximize2 size={14} />
+                          <Maximize2 size={16} />
                         </button>
                         {canDelete && (
                           <button
@@ -307,8 +308,8 @@ export function PhotosTab({ tripId, trip, onRefresh }: PhotosTabProps) {
                             style={{
                               background: 'rgba(217, 83, 79, 0.85)',
                               color: '#fff',
-                              width: '30px',
-                              height: '30px',
+                              width: '32px',
+                              height: '32px',
                               borderRadius: '6px',
                             }}
                             onClick={(e) => {
@@ -316,8 +317,9 @@ export function PhotosTab({ tripId, trip, onRefresh }: PhotosTabProps) {
                               handleDeletePhoto(photo.id)
                             }}
                             title="Delete photo"
+                            aria-label="Delete photo"
                           >
-                            <Trash2 size={14} />
+                            <Trash2 size={16} />
                           </button>
                         )}
                       </div>
@@ -328,7 +330,7 @@ export function PhotosTab({ tripId, trip, onRefresh }: PhotosTabProps) {
                       <p
                         style={{
                           fontSize: '13px',
-                          color: photo.caption ? 'var(--ink)' : '#929e96',
+                          color: photo.caption ? 'var(--ink)' : '#506155',
                           margin: 0,
                           fontWeight: photo.caption ? 500 : 400,
                           lineHeight: 1.4,
@@ -342,15 +344,15 @@ export function PhotosTab({ tripId, trip, onRefresh }: PhotosTabProps) {
                           display: 'flex',
                           justifyContent: 'space-between',
                           alignItems: 'center',
-                          fontSize: '11px',
-                          color: '#7b877f',
+                          fontSize: '12px',
+                          color: '#506155',
                           marginTop: '10px',
                           borderTop: '1px solid #f0f3ee',
                           paddingTop: '8px',
                         }}
                       >
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <User size={11} /> {photo.user_name || 'Trip member'}
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                          <User size={13} /> {photo.user_name || 'Trip member'}
                         </span>
                         <span>
                           {photo.taken_at
@@ -369,7 +371,7 @@ export function PhotosTab({ tripId, trip, onRefresh }: PhotosTabProps) {
               style={{
                 textAlign: 'center',
                 padding: '48px 20px',
-                color: '#778',
+                color: '#506155',
                 border: '1px dashed var(--line)',
                 background: '#fafbf9',
               }}
@@ -380,7 +382,7 @@ export function PhotosTab({ tripId, trip, onRefresh }: PhotosTabProps) {
                 Capture moments from your expedition across Bangladesh. Add photos by URL to share with all trip members.
               </p>
               <button className="primary-btn" onClick={() => setIsAddOpen(true)}>
-                <Plus size={16} /> Add First Photo
+                <Plus size={17} /> Add First Photo
               </button>
             </div>
           )}
@@ -391,7 +393,7 @@ export function PhotosTab({ tripId, trip, onRefresh }: PhotosTabProps) {
       {isAddOpen && (
         <div className="modal-backdrop" onClick={() => setIsAddOpen(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
-            <button className="modal-close" onClick={() => setIsAddOpen(false)}>
+            <button className="modal-close" onClick={() => setIsAddOpen(false)} aria-label="Close add photo modal">
               <X size={18} />
             </button>
 
@@ -426,7 +428,7 @@ export function PhotosTab({ tripId, trip, onRefresh }: PhotosTabProps) {
               {/* Live Image Preview */}
               {url.trim() && (
                 <div style={{ marginTop: '14px' }}>
-                  <small style={{ color: '#778', display: 'block', marginBottom: '6px' }}>
+                  <small style={{ color: '#5a685e', fontSize: '13px', fontWeight: 500, display: 'block', marginBottom: '6px' }}>
                     Preview:
                   </small>
                   <div
@@ -511,7 +513,7 @@ export function PhotosTab({ tripId, trip, onRefresh }: PhotosTabProps) {
                 style={{ color: '#c4d1c8', display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none', fontSize: '12px' }}
                 title="Open original image"
               >
-                <ExternalLink size={15} /> Original
+                <ExternalLink size={16} /> Original
               </a>
 
               {canDeletePhoto(activePhoto) && (
@@ -528,8 +530,9 @@ export function PhotosTab({ tripId, trip, onRefresh }: PhotosTabProps) {
                     cursor: 'pointer',
                   }}
                   title="Delete photo"
+                  aria-label="Delete photo"
                 >
-                  <Trash2 size={15} /> Delete
+                  <Trash2 size={16} /> Delete
                 </button>
               )}
 
@@ -548,6 +551,7 @@ export function PhotosTab({ tripId, trip, onRefresh }: PhotosTabProps) {
                   marginLeft: '8px',
                 }}
                 title="Close (Esc)"
+                aria-label="Close preview"
               >
                 <X size={18} />
               </button>
@@ -583,6 +587,7 @@ export function PhotosTab({ tripId, trip, onRefresh }: PhotosTabProps) {
                   zIndex: 2,
                 }}
                 title="Previous photo (Left arrow)"
+                aria-label="Previous photo"
               >
                 <ChevronLeft size={24} />
               </button>
@@ -628,6 +633,7 @@ export function PhotosTab({ tripId, trip, onRefresh }: PhotosTabProps) {
                   zIndex: 2,
                 }}
                 title="Next photo (Right arrow)"
+                aria-label="Next photo"
               >
                 <ChevronRight size={24} />
               </button>
@@ -649,7 +655,7 @@ export function PhotosTab({ tripId, trip, onRefresh }: PhotosTabProps) {
                 {activePhoto.caption}
               </h3>
             )}
-            <p style={{ fontSize: '12px', color: '#97a89d', margin: 0 }}>
+            <p style={{ fontSize: '13px', color: '#d4dfd7', margin: 0 }}>
               Uploaded by <strong>{activePhoto.user_name || 'Trip member'}</strong> ·{' '}
               {formatDate(activePhoto.taken_at || activePhoto.created_at)}
             </p>

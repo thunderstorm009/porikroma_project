@@ -37,15 +37,19 @@ export function AdminVerifications() {
                 <td>
                   {v.status === 'PENDING' && (
                     <div style={{ display: 'flex', gap: '6px' }}>
-                      <button className="primary-btn" style={{ height: '26px', fontSize: '10px' }} onClick={() => decide(v.id, 'APPROVED')}>Approve</button>
-                      <button className="danger-btn" style={{ height: '26px', fontSize: '10px' }} onClick={() => decide(v.id, 'REJECTED')}>Reject</button>
+                      <button className="primary-btn small" onClick={() => decide(v.id, 'APPROVED')}>Approve</button>
+                      <button className="danger-btn small" onClick={() => decide(v.id, 'REJECTED')}>Reject</button>
                     </div>
                   )}
                 </td>
               </tr>
             ))}
             {!verifs.length && (
-              <tr><td colSpan={5} style={{ padding: '24px', textAlign: 'center', color: '#889' }}>No pending verification requests.</td></tr>
+              <tr>
+                <td colSpan={5} style={{ padding: '32px 16px', textAlign: 'center', color: '#5a685e', fontSize: '14px' }}>
+                  No pending verification requests.
+                </td>
+              </tr>
             )}
           </tbody>
         </table>

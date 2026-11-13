@@ -34,7 +34,7 @@ export function AdminDestinations() {
       <PageHeader
         title="Destination management"
         description="Add, edit, or remove destinations discoverable across Bangladesh."
-        action={<button className="primary-btn" onClick={() => setShowModal(true)}><Plus size={16} /> Add destination</button>}
+        action={<button className="primary-btn" onClick={() => setShowModal(true)}><Plus size={17} /> Add destination</button>}
       />
 
       <div className="table-container">
@@ -58,7 +58,7 @@ export function AdminDestinations() {
                 <td><span className="badge badge-blue">{d.category}</span></td>
                 <td>৳ {d.estimated_budget?.toLocaleString()}</td>
                 <td>
-                  <button className="icon-btn" onClick={() => remove(d.id)}><Trash2 size={14} /></button>
+                  <button className="icon-btn" onClick={() => remove(d.id)} aria-label="Delete destination"><Trash2 size={16} /></button>
                 </td>
               </tr>
             ))}
@@ -69,7 +69,7 @@ export function AdminDestinations() {
       {showModal && (
         <div className="modal-backdrop" onClick={() => setShowModal(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setShowModal(false)}><X size={18} /></button>
+            <button className="modal-close" onClick={() => setShowModal(false)} aria-label="Close dialog"><X size={18} /></button>
             <h2>Add new destination</h2>
             <label>Name<input autoFocus placeholder="e.g. Kuakata Sea Beach" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
             <label>Division<input value={form.division} onChange={(e) => setForm({ ...form, division: e.target.value })} /></label>

@@ -93,13 +93,13 @@ export function CalendarPage() {
               <h2>{selected.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}</h2>
               <p>{selectedEvents.length ? `${selectedEvents.length} event${selectedEvents.length > 1 ? 's' : ''}` : 'Nothing scheduled'}</p>
             </div>
-            <CalendarDays size={20} />
+            <CalendarDays size={22} />
           </div>
           {selectedEvents.length ? (
             <div className="selected-events">
               {selectedEvents.map((event) => (
                 <div className="workspace-list-row" key={event}>
-                  <span className="list-marker"><CalendarDays size={13} /></span>
+                  <span className="list-marker"><CalendarDays size={15} /></span>
                   <strong>{event}</strong>
                 </div>
               ))}
@@ -111,7 +111,7 @@ export function CalendarPage() {
               <p>Use today to dream up where you’ll go next.</p>
             </div>
           )}
-          <button className="panel-link" onClick={addEvent}>Add personal note or stop <Plus size={15} /></button>
+          <button className="panel-link" onClick={addEvent}>Add personal note or stop <Plus size={16} /></button>
         </aside>
       </div>
     </div>

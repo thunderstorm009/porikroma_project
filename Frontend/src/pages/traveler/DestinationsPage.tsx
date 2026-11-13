@@ -43,7 +43,7 @@ export function DestinationsPage() {
           <Search size={16} />
           <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search destinations, districts, or divisions..." />
         </div>
-        <select value={category} onChange={(e) => setCategory(e.target.value)} style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--line)', fontSize: '12px' }}>
+        <select value={category} onChange={(e) => setCategory(e.target.value)} style={{ padding: '0 36px 0 14px', height: '44px', borderRadius: '8px', border: '1px solid var(--line-strong)', fontSize: '16px' }}>
           <option value="All">All categories</option>
           <option value="Beach">Beach</option>
           <option value="Nature">Nature</option>
@@ -58,18 +58,18 @@ export function DestinationsPage() {
           <article className="destination-discovery-card" key={d.id} onClick={() => navigate(`/destinations/${d.id}`)} style={{ cursor: 'pointer' }}>
             <img src={d.image || 'https://images.unsplash.com/photo-1528127269322-539801943592?w=700&q=85'} alt={d.name} />
             <div className="destination-discovery-body">
-              <span className="recommendation-reason"><Sparkles size={12} /> {d.category} · {d.division}</span>
+              <span className="recommendation-reason"><Sparkles size={14} /> {d.category} · {d.division}</span>
               <h3>{d.name}</h3>
-              <p className="destination-location"><MapPin size={13} /> {d.district}, {d.division}</p>
+              <p className="destination-location"><MapPin size={14} /> {d.district}, {d.division}</p>
               <p>{d.description}</p>
               <div className="destination-facts">
-                <span><Banknote size={13} /> From ৳ {d.estimated_budget?.toLocaleString()}</span>
-                <span><Star size={13} color="#f5a623" /> {d.rating || 4.8} ({d.review_count || 12} reviews)</span>
+                <span><Banknote size={14} /> From ৳ {d.estimated_budget?.toLocaleString()}</span>
+                <span><Star size={14} color="#f5a623" /> {d.rating || 4.8} ({d.review_count || 12} reviews)</span>
               </div>
               <div className="destination-card-actions">
-                <button onClick={() => navigate(`/destinations/${d.id}`)}>View destination <ArrowUpRight size={14} /></button>
-                <button className="icon-btn" onClick={(e) => toggleWishlist(d.id, e)} title="Save to wishlist">
-                  <Heart size={16} color={wishlist.includes(d.id) ? '#e04f4f' : '#69736c'} fill={wishlist.includes(d.id) ? '#e04f4f' : 'none'} />
+                <button onClick={() => navigate(`/destinations/${d.id}`)}>View destination <ArrowUpRight size={15} /></button>
+                <button className="icon-btn" onClick={(e) => toggleWishlist(d.id, e)} title="Save to wishlist" aria-label="Save to wishlist">
+                  <Heart size={18} color={wishlist.includes(d.id) ? '#e04f4f' : '#69736c'} fill={wishlist.includes(d.id) ? '#e04f4f' : 'none'} />
                 </button>
               </div>
             </div>

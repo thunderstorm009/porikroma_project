@@ -14,14 +14,22 @@ export function GroupDetailsPage() {
   const [feedback, setFeedback] = useState('')
 
   useEffect(() => {
-    // If preview or specific ID
-    const targetId = groupId === 'preview' ? 'first' : groupId
-    api<GroupExpedition[]>('/api/groups').then((list) => {
-      const match = targetId === 'first' ? list[0] : list.find((g) => g.id === targetId)
-      if (match) {
-        api<typeof group>(`/api/groups/${match.id}`).then(setGroup).catch(() => setGroup(match as any))
-      }
-    })
+    if (groupId && groupId !== 'preview') {
+      api<typeof group>(`/api/groups/${groupId}`)
+        .then(setGroup)
+        .catch(() => {
+          api<GroupExpedition[]>('/api/groups').then((list) => {
+            const match = list.find((g) => g.id === groupId)
+            if (match) setGroup(match as any)
+          })
+        })
+    } else {
+      api<GroupExpedition[]>('/api/groups').then((list) => {
+        if (list && list.length > 0) {
+          api<typeof group>(`/api/groups/${list[0].id}`).then(setGroup).catch(() => setGroup(list[0] as any))
+        }
+      })
+    }
   }, [groupId])
 
   const submitApplication = async () => {
@@ -43,7 +51,7 @@ export function GroupDetailsPage() {
         eyebrow="Expedition dossier · Verified organizer"
         title={group.title}
         description="A thoughtful, small-group journey crafted with local respect."
-        action={<span className="status green"><ShieldCheck size={12} /> Verified expedition</span>}
+        action={<span className="status green"><ShieldCheck size={14} /> Verified expedition</span>}
       />
 
       <div className="expedition-detail-layout">
@@ -73,10 +81,10 @@ export function GroupDetailsPage() {
                   <p className="positive" style={{ margin: '8px 0', fontSize: '12px' }}>{feedback}</p>
                 ) : (
                   <button className="primary-btn" onClick={() => setDrawer(true)} disabled={applied}>
-                    {applied ? 'Request submitted' : 'Request to join'} <ArrowUpRight size={14} />
+                    {applied ? 'Request submitted' : 'Request to join'} <ArrowUpRight size={15} />
                   </button>
                 )}
-                <small><Clock3 size={11} /> Application reviewed by organizer</small>
+                <small style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Clock3 size={13} /> Application reviewed by organizer</small>
               </div>
             </div>
           </div>
@@ -112,7 +120,7 @@ export function GroupDetailsPage() {
                 <h2>People going</h2>
                 <p>{group.member_count || 1} of {group.capacity} spots filled</p>
               </div>
-              <Users size={18} />
+              <Users size={20} />
             </div>
             {group.members?.map((m) => (
               <div className="member-row" key={m.id}>
@@ -121,16 +129,16 @@ export function GroupDetailsPage() {
                   <strong>{m.name}</strong>
                   <small>Expedition member</small>
                 </div>
-                <CheckCircle2 size={15} color="var(--green)" />
+                <CheckCircle2 size={16} color="var(--green)" />
               </div>
             ))}
           </div>
 
           <div className="panel requirements">
             <h2>Before you apply</h2>
-            <p><FileText size={13} /> Comfortable with walking and outdoor trails</p>
-            <p><ShieldCheck size={13} /> Answers reviewed privately by organizer</p>
-            <p><Banknote size={13} /> Deposit requested only after application approval</p>
+            <p><FileText size={15} /> Comfortable with walking and outdoor trails</p>
+            <p><ShieldCheck size={15} /> Answers reviewed privately by organizer</p>
+            <p><Banknote size={15} /> Deposit requested only after application approval</p>
           </div>
         </aside>
       </div>
@@ -138,7 +146,7 @@ export function GroupDetailsPage() {
       {drawer && (
         <div className="drawer-backdrop" onClick={() => setDrawer(false)}>
           <aside className="join-drawer" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setDrawer(false)}><X size={19} /></button>
+            <button className="modal-close" onClick={() => setDrawer(false)} aria-label="Close drawer"><X size={19} /></button>
             <p className="eyebrow">Expedition dossier</p>
             <h2>Join request application</h2>
             <p className="drawer-intro">Answer a few quick questions so the group travels well together.</p>
@@ -165,7 +173,7 @@ export function GroupDetailsPage() {
               </label>
 
               <button className="primary-btn drawer-next" style={{ marginTop: '20px', width: '100%', justifyContent: 'center' }} onClick={submitApplication}>
-                Submit application <Send size={15} />
+                Submit application <Send size={16} />
               </button>
             </div>
           </aside>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { Compass, Users, Check, ChevronRight, ArrowUpRight } from 'lucide-react'
 import { api } from '../../api'
 import type { Destination, Trip } from '../../types'
@@ -7,16 +7,20 @@ import { PageHeader } from '../../components/common/PageHeader'
 
 export function CreateTrip() {
   const navigate = useNavigate()
-  const [mode, setMode] = useState<'solo' | 'group' | null>('solo')
+  const location = useLocation()
+  const [searchParams] = useSearchParams()
+
+  const initialMode = location.pathname.includes('group') || searchParams.get('mode') === 'group' ? 'group' : 'solo'
+  const [mode, setMode] = useState<'solo' | 'group' | null>(initialMode)
   const [destinations, setDestinations] = useState<Destination[]>([])
   const [form, setForm] = useState({
-    name: '',
-    destinationId: '',
-    startDate: new Date().toISOString().slice(0, 10),
-    endDate: new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10),
-    budget: '25000',
-    groupSize: '4',
-    description: '',
+    name: searchParams.get('name') || '',
+    destinationId: searchParams.get('destinationId') || '',
+    startDate: searchParams.get('startDate') || new Date().toISOString().slice(0, 10),
+    endDate: searchParams.get('endDate') || new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10),
+    budget: searchParams.get('budget') || '25000',
+    groupSize: searchParams.get('groupSize') || '4',
+    description: searchParams.get('description') || '',
   })
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
@@ -85,17 +89,17 @@ export function CreateTrip() {
 
       <div className="mode-grid">
         <button className={mode === 'solo' ? 'mode-card selected' : 'mode-card'} onClick={() => setMode('solo')}>
-          <span className="mode-icon"><Compass size={25} /></span>
+          <span className="mode-icon"><Compass size={26} /></span>
           <h2>Solo travel</h2>
           <p>Your pace, your places, your private or shared little adventure.</p>
-          <span className="mode-check">{mode === 'solo' ? <Check size={16} /> : <ChevronRight size={17} />}</span>
+          <span className="mode-check">{mode === 'solo' ? <Check size={18} /> : <ChevronRight size={18} />}</span>
         </button>
 
         <button className={mode === 'group' ? 'mode-card selected' : 'mode-card'} onClick={() => setMode('group')}>
-          <span className="mode-icon"><Users size={25} /></span>
+          <span className="mode-icon"><Users size={26} /></span>
           <h2>Group expedition</h2>
           <p>Bring travelers together around a shared story, split budget, and seats.</p>
-          <span className="mode-check">{mode === 'group' ? <Check size={16} /> : <ChevronRight size={17} />}</span>
+          <span className="mode-check">{mode === 'group' ? <Check size={18} /> : <ChevronRight size={18} />}</span>
         </button>
       </div>
 

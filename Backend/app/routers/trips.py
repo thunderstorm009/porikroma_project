@@ -757,10 +757,10 @@ async def list_trip_photos(
 
     rows = await db.fetch(
         """
-        SELECT tp.*, coalesce(tp.user_id, tp.uploaded_by) AS user_id,
+        SELECT tp.*, tp.user_id,
           u.name AS user_name, u.email AS user_email
         FROM trip_photos tp
-        LEFT JOIN users u ON u.id = coalesce(tp.user_id, tp.uploaded_by)
+        LEFT JOIN users u ON u.id = tp.user_id
         WHERE tp.trip_id = $1
         ORDER BY tp.created_at DESC
         """,
@@ -838,7 +838,7 @@ async def delete_trip_photo(
         )
 
     photo = await db.fetchrow(
-        "SELECT id, trip_id, coalesce(user_id, uploaded_by) AS user_id FROM trip_photos WHERE id = $1 AND trip_id = $2",
+        "SELECT id, trip_id, user_id FROM trip_photos WHERE id = $1 AND trip_id = $2",
         p_uuid,
         t_uuid,
     )

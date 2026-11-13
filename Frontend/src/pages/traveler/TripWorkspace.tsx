@@ -110,7 +110,7 @@ export function TripWorkspace() {
         <div>
           <p className="eyebrow">Trip workspace · <span className={`badge ${trip.status === 'UPCOMING' ? 'badge-orange' : trip.status === 'COMPLETED' ? 'badge-green' : 'badge-blue'}`}>{trip.status}</span></p>
           <h1>{trip.name}</h1>
-          <p><MapPin size={14} /> {trip.destination_name} · {trip.start_date} – {trip.end_date}</p>
+          <p><MapPin size={15} /> {trip.destination_name} · {trip.start_date} – {trip.end_date}</p>
         </div>
       </div>
 
@@ -173,17 +173,16 @@ export function TripWorkspace() {
                         {comp.name ? comp.name[0].toUpperCase() : 'T'}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <strong style={{ display: 'block', fontSize: '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        <strong style={{ display: 'block', fontSize: '14.5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {comp.name}
                         </strong>
-                        <small style={{ color: '#718096', fontSize: '11px', display: 'block' }}>{comp.email}</small>
+                        <small style={{ color: '#5a685e', fontSize: '12.5px', display: 'block' }}>{comp.email}</small>
                       </div>
                       <button
-                        className="primary-btn"
-                        style={{ height: '32px', padding: '0 12px', fontSize: '12px', gap: '5px' }}
+                        className="primary-btn small"
                         onClick={() => handleOpenReviewModal(comp)}
                       >
-                        Review <Star size={12} fill="white" />
+                        Review <Star size={15} fill="white" />
                       </button>
                     </div>
                   ))}
@@ -199,7 +198,7 @@ export function TripWorkspace() {
                 <p>Your itinerary at a glance</p>
               </div>
               <button className="text-btn" onClick={() => navigate(`/trips/${tripId}/itinerary`)}>
-                Open itinerary <ArrowUpRight size={15} />
+                Open itinerary <ArrowUpRight size={16} />
               </button>
             </div>
             {itinerary.length > 0 ? (
@@ -209,10 +208,10 @@ export function TripWorkspace() {
                   <strong>{itinerary[0].title}</strong>
                   <small>{itinerary[0].location || trip.destination_name}</small>
                 </div>
-                <Check size={17} />
+                <Check size={18} />
               </div>
             ) : (
-              <div style={{ padding: '20px', color: '#778', fontSize: '12px' }}>
+              <div style={{ padding: '24px 16px', color: '#5a685e', fontSize: '14px', textAlign: 'center' }}>
                 No itinerary items scheduled yet. Click below to add your first stop.
               </div>
             )}
@@ -226,7 +225,7 @@ export function TripWorkspace() {
               <div className="progress"><i style={{ width: `${budgetUtilization}%` }} /></div>
             </div>
             <button className="panel-link" onClick={() => navigate(`/trips/${tripId}/expenses`)}>
-              Manage expenses ledger <ChevronRight size={15} />
+              Manage expenses ledger <ChevronRight size={16} />
             </button>
           </div>
 
@@ -247,23 +246,23 @@ export function TripWorkspace() {
             </div>
             <div className="quick-actions">
               <button onClick={() => navigate(`/trips/${tripId}/expenses`)}>
-                <span><DollarSign size={17} /></span> Add an expense <ArrowUpRight size={14} />
+                <span><DollarSign size={18} /></span> Add an expense <ArrowUpRight size={15} />
               </button>
               <button onClick={() => navigate(`/trips/${tripId}/notes`)}>
-                <span><MessageCircle size={17} /></span> Write a note <ArrowUpRight size={14} />
+                <span><MessageCircle size={18} /></span> Write a note <ArrowUpRight size={15} />
               </button>
               <button onClick={() => navigate(`/trips/${tripId}/journal`)}>
-                <span><Sparkles size={17} /></span> Add a memory <ArrowUpRight size={14} />
+                <span><Sparkles size={18} /></span> Add a memory <ArrowUpRight size={15} />
               </button>
               <button onClick={() => navigate(`/trips/${tripId}/photos`)}>
-                <span><Camera size={17} /></span> Trip photos <ArrowUpRight size={14} />
+                <span><Camera size={18} /></span> Trip photos <ArrowUpRight size={15} />
               </button>
               <button onClick={() => navigate(`/trips/${tripId}/checklist`)}>
-                <span><Check size={17} /></span> Packing checklist <ArrowUpRight size={14} />
+                <span><Check size={18} /></span> Packing checklist <ArrowUpRight size={15} />
               </button>
               {trip.status === 'COMPLETED' && pendingCompanions.length > 0 && (
                 <button onClick={() => handleOpenReviewModal(pendingCompanions[0])}>
-                  <span><Star size={17} color="#f59e0b" fill="#f59e0b" /></span> Review travel mates <ArrowUpRight size={14} />
+                  <span><Star size={18} color="#f59e0b" fill="#f59e0b" /></span> Review travel mates <ArrowUpRight size={15} />
                 </button>
               )}
             </div>
@@ -331,31 +330,32 @@ export function TripWorkspace() {
                   {reviewingCompanion.name ? reviewingCompanion.name[0].toUpperCase() : 'T'}
                 </div>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: '16px' }}>Review {reviewingCompanion.name}</h3>
-                  <small style={{ color: '#64748b' }}>Expedition companion</small>
+                  <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, color: '#1a2e22' }}>Review {reviewingCompanion.name}</h3>
+                  <small style={{ color: '#5a685e', fontSize: '13px' }}>Expedition companion</small>
                 </div>
               </div>
               <button
                 className="icon-btn"
                 onClick={() => setReviewingCompanion(null)}
                 disabled={submittingReview}
+                aria-label="Close review dialog"
               >
                 <X size={18} />
               </button>
             </div>
 
-            <p style={{ color: '#475569', fontSize: '12px', margin: '0 0 16px' }}>
+            <p style={{ color: '#4e5e52', fontSize: '14px', lineHeight: 1.5, margin: '0 0 16px' }}>
               Rate your travel experience together on <strong>{trip.name}</strong>. Your honest review helps travelers find great companions.
             </p>
 
             {reviewError && (
-              <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '10px 14px', borderRadius: '6px', fontSize: '12px', marginBottom: '14px' }}>
+              <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '10px 14px', borderRadius: '6px', fontSize: '13.5px', marginBottom: '14px' }}>
                 {reviewError}
               </div>
             )}
 
             <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontWeight: 600, fontSize: '12px', marginBottom: '8px' }}>
+              <label style={{ display: 'block', fontWeight: 600, fontSize: '14px', marginBottom: '8px' }}>
                 Rating: {rating} of 5 stars
               </label>
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -374,14 +374,14 @@ export function TripWorkspace() {
                     />
                   </button>
                 ))}
-                <span style={{ fontSize: '12px', fontWeight: 600, color: '#f59e0b', marginLeft: '6px' }}>
+                <span style={{ fontSize: '14px', fontWeight: 600, color: '#f59e0b', marginLeft: '6px' }}>
                   {rating === 5 ? 'Exceptional mate' : rating === 4 ? 'Very good' : rating === 3 ? 'Good' : rating === 2 ? 'Needs improvement' : 'Challenging'}
                 </span>
               </div>
             </div>
 
             <div style={{ marginBottom: '18px' }}>
-              <label style={{ display: 'block', fontWeight: 600, fontSize: '12px', marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontWeight: 600, fontSize: '14px', marginBottom: '6px' }}>
                 Comment & Feedback
               </label>
               <textarea
@@ -389,7 +389,7 @@ export function TripWorkspace() {
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
                 placeholder="Mention teamwork, punctuality, communication, or favorite shared moments..."
-                style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--line, #cbd5e1)', fontSize: '13px', boxSizing: 'border-box' }}
+                style={{ width: '100%', padding: '12px 14px', borderRadius: '8px', border: '1px solid var(--line)', fontSize: '16px', boxSizing: 'border-box' }}
               />
             </div>
 

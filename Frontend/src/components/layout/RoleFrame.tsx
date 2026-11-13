@@ -1,6 +1,6 @@
-import React from 'react'
-import { ArrowUpRight, ChevronRight, Compass, Settings } from 'lucide-react'
-import { Link, useNavigate } from 'react-router-dom'
+import React, { useState } from 'react'
+import { ArrowUpRight, ChevronRight, Compass, Menu, Settings, X } from 'lucide-react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 
 export interface RoleFrameProps {
   role: 'planner' | 'admin'
@@ -9,6 +9,8 @@ export interface RoleFrameProps {
 
 export function RoleFrame({ role, children }: RoleFrameProps) {
   const navigate = useNavigate()
+  const location = useLocation()
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const isPlanner = role === 'planner'
   const links = isPlanner
     ? [
@@ -29,10 +31,21 @@ export function RoleFrame({ role, children }: RoleFrameProps) {
         ['Reports', '/admin/reports'],
       ]
 
+  const isActive = (path: string) => {
+    if (path === '/planner/dashboard' || path === '/admin/dashboard') {
+      return location.pathname === path
+    }
+    return location.pathname.startsWith(path)
+  }
+
   return (
     <div className="route-shell">
-      <aside className="sidebar route-sidebar role-sidebar">
-        <div className="brand">
+      {sidebarOpen && (
+        <div className="sidebar-backdrop" onClick={() => setSidebarOpen(false)} />
+      )}
+
+      <aside className={`sidebar route-sidebar role-sidebar ${sidebarOpen ? 'open' : ''}`}>
+        <div className="brand" onClick={() => { setSidebarOpen(false); navigate('/') }} style={{ cursor: 'pointer' }}>
           <span className="brand-mark">p</span>
           <span>porikroma</span>
         </div>
@@ -40,16 +53,21 @@ export function RoleFrame({ role, children }: RoleFrameProps) {
 
         <nav className="primary-nav">
           {links.map(([label, path]) => (
-            <Link className="nav-item" to={path} key={path}>
-              {isPlanner ? <Compass size={17} /> : <Settings size={17} />}
+            <Link
+              className={isActive(path) ? 'nav-item active' : 'nav-item'}
+              to={path}
+              key={path}
+              onClick={() => setSidebarOpen(false)}
+            >
+              {isPlanner ? <Compass size={18} /> : <Settings size={18} />}
               <span>{label}</span>
             </Link>
           ))}
         </nav>
 
         <div className="sidebar-bottom">
-          <button className="nav-item" onClick={() => navigate('/dashboard')}>
-            <ArrowUpRight size={17} />
+          <button className="nav-item" onClick={() => { setSidebarOpen(false); navigate('/dashboard') }}>
+            <ArrowUpRight size={18} />
             <span>Traveler view</span>
           </button>
         </div>
@@ -57,10 +75,18 @@ export function RoleFrame({ role, children }: RoleFrameProps) {
 
       <main className="main-content">
         <header className="topbar">
+          <button
+            className="mobile-menu"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            aria-label="Toggle navigation menu"
+          >
+            {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
+
           <div className="breadcrumbs">
             <span>{isPlanner ? 'Operations' : 'Administration'}</span>
             <ChevronRight size={14} />
-            <strong>Workspace</strong>
+            <strong>{links.find(([, p]) => isActive(p))?.[0] || 'Workspace'}</strong>
           </div>
         </header>
         {children}

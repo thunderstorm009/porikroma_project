@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import {
   ChevronRight, MapPin, Banknote, Users, CalendarDays,
-  ShieldCheck, Clock, CheckCircle2, ArrowUpRight, AlertCircle, Sparkles, Check
+  ShieldCheck, Clock, CheckCircle2, ArrowUpRight, AlertCircle, Sparkles, Check, X
 } from 'lucide-react'
 import { api } from '../../api'
 import type { Tour, TourDeparture } from '../../types'
@@ -63,12 +63,12 @@ export function TourDetailsPage() {
 
   if (loading) {
     return (
-      <div className="page" style={{ padding: '60px 20px', textAlign: 'center', color: '#6d7770' }}>
+      <div className="page" style={{ padding: '60px 20px', textAlign: 'center', color: '#506155' }}>
         <div className="avatar" style={{ width: '40px', height: '40px', margin: '0 auto 14px', background: '#e8efe5', color: 'var(--green)' }}>
           <Sparkles size={20} />
         </div>
         <strong>Loading tour dossier…</strong>
-        <p style={{ fontSize: '12px', color: '#889', marginTop: '4px' }}>Fetching itinerary, departures, and operator details</p>
+        <p style={{ fontSize: '13px', color: '#506155', marginTop: '4px' }}>Fetching itinerary, departures, and operator details</p>
       </div>
     )
   }
@@ -77,12 +77,12 @@ export function TourDetailsPage() {
     return (
       <div className="page">
         <button className="back-link" onClick={() => navigate('/tours')}>
-          <ChevronRight size={14} className="back-arrow" /> Back to tours
+          <ChevronRight size={16} className="back-arrow" /> Back to tours
         </button>
         <div className="panel" style={{ margin: '24px 0', textAlign: 'center', padding: '36px', border: '1px solid #f2dede', background: '#fff5f5' }}>
           <AlertCircle size={32} color="#d9534f" style={{ margin: '0 auto 10px' }} />
           <h2 style={{ fontSize: '16px', color: '#a94442' }}>Tour not found</h2>
-          <p style={{ color: '#778', fontSize: '12px', margin: '6px 0 16px' }}>{error || 'The requested tour does not exist or has been unpublished.'}</p>
+          <p style={{ color: '#506155', fontSize: '13px', margin: '6px 0 16px' }}>{error || 'The requested tour does not exist or has been unpublished.'}</p>
           <button className="primary-btn" onClick={() => navigate('/tours')}>Browse available tours</button>
         </div>
       </div>
@@ -94,7 +94,7 @@ export function TourDetailsPage() {
   return (
     <div className="page">
       <button className="back-link" onClick={() => navigate('/tours')}>
-        <ChevronRight size={14} className="back-arrow" /> Back to all tours
+        <ChevronRight size={16} className="back-arrow" /> Back to all tours
       </button>
 
       {/* Tour Hero Banner */}
@@ -105,7 +105,7 @@ export function TourDetailsPage() {
         />
         <div>
           <span className="pill dark">
-            <ShieldCheck size={12} style={{ marginRight: '4px' }} /> Verified Tour Package · {tour.destination_name}
+            <ShieldCheck size={14} style={{ marginRight: '5px' }} /> Verified Tour Package · {tour.destination_name}
           </span>
           <h1>{tour.title}</h1>
           <p style={{ maxWidth: '680px', marginTop: '8px' }}>{tour.description}</p>
@@ -143,7 +143,7 @@ export function TourDetailsPage() {
               </div>
             </div>
 
-            <p className="long-copy" style={{ lineHeight: 1.6, fontSize: '13px', color: '#445148' }}>
+            <p className="long-copy" style={{ lineHeight: 1.6, fontSize: '14.5px', color: '#334438' }}>
               {tour.description}
             </p>
           </section>
@@ -183,22 +183,22 @@ export function TourDetailsPage() {
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                         <CalendarDays size={15} color="var(--green)" />
-                        <strong style={{ fontSize: '14px' }}>
+                        <strong style={{ fontSize: '15px' }}>
                           {formatDate(dep.start_date)} – {formatDate(dep.end_date)}
                         </strong>
-                        <span className={`badge ${isFull ? 'badge-red' : 'badge-green'}`} style={{ fontSize: '10px' }}>
+                        <span className={`badge ${isFull ? 'badge-red' : 'badge-green'}`} style={{ fontSize: '12px' }}>
                           {isFull ? 'Sold Out' : `${seatsLeft} seats left`}
                         </span>
                       </div>
-                      <small style={{ color: '#7a857e' }}>
+                      <small style={{ color: '#5a685e', fontSize: '13px' }}>
                         Capacity: {dep.capacity} travelers · {booked} currently booked
                       </small>
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                       <div style={{ textAlign: 'right' }}>
-                        <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#889', display: 'block' }}>Package Price</span>
-                        <strong style={{ fontSize: '15px', color: 'var(--green-dark)' }}>{formatBDT(tour.price)}</strong>
+                        <span style={{ fontSize: '12px', textTransform: 'uppercase', color: '#5a685e', display: 'block', fontWeight: 500 }}>Package Price</span>
+                        <strong style={{ fontSize: '16.5px', color: 'var(--green-dark)' }}>{formatBDT(tour.price)}</strong>
                       </div>
 
                       {isAuthenticated ? (
@@ -228,10 +228,10 @@ export function TourDetailsPage() {
               })}
 
               {!departures.length && (
-                <div style={{ padding: '36px', textAlign: 'center', color: '#889' }}>
-                  <CalendarDays size={28} style={{ margin: '0 auto 8px', color: '#b0bab2' }} />
-                  <p>No upcoming departures currently scheduled for this tour.</p>
-                  <small>Check back soon or message the tour planner below.</small>
+                <div style={{ padding: '36px 20px', textAlign: 'center', color: '#5a685e' }}>
+                  <CalendarDays size={28} style={{ margin: '0 auto 8px', color: 'var(--green)' }} />
+                  <p style={{ fontSize: '14.5px', fontWeight: 500, margin: '4px 0' }}>No upcoming departures currently scheduled for this tour.</p>
+                  <small style={{ fontSize: '13px', color: '#5a685e' }}>Check back soon or message the tour planner below.</small>
                 </div>
               )}
             </div>
@@ -255,21 +255,21 @@ export function TourDetailsPage() {
                 {tour.planner_name?.[0] || 'N'}
               </div>
               <div>
-                <strong style={{ fontSize: '14px', display: 'block' }}>{tour.planner_name || 'Expedition Host'}</strong>
-                <small style={{ color: '#6d7b71' }}>✦ 4.9 · Certified Tour Planner</small>
+                <strong style={{ fontSize: '15.5px', display: 'block' }}>{tour.planner_name || 'Expedition Host'}</strong>
+                <small style={{ color: '#3b5f3f', fontSize: '13px', fontWeight: 500 }}>✦ 4.9 · Certified Tour Planner</small>
               </div>
             </div>
 
-            <p style={{ fontSize: '12px', color: '#627065', lineHeight: 1.5, margin: '8px 0 16px' }}>
+            <p style={{ fontSize: '13.5px', color: '#4e5e52', lineHeight: 1.5, margin: '8px 0 16px' }}>
               {tour.planner_bio || 'Experienced guide committed to sustainable exploration, local cultural respect, and safety across Bangladesh.'}
             </p>
 
-            <div style={{ borderTop: '1px solid #edf0ea', paddingTop: '12px', fontSize: '11px', color: '#778' }}>
+            <div style={{ borderTop: '1px solid #edf0ea', paddingTop: '12px', fontSize: '13px', color: '#3b5a41' }}>
               <p style={{ display: 'flex', alignItems: 'center', gap: '6px', margin: '4px 0' }}>
-                <CheckCircle2 size={13} color="var(--green)" /> Identity & credentials verified
+                <CheckCircle2 size={15} color="var(--green)" /> Identity & credentials verified
               </p>
               <p style={{ display: 'flex', alignItems: 'center', gap: '6px', margin: '4px 0' }}>
-                <CheckCircle2 size={13} color="var(--green)" /> Transparent pricing in BDT
+                <CheckCircle2 size={15} color="var(--green)" /> Transparent pricing in BDT
               </p>
             </div>
           </div>
@@ -280,7 +280,7 @@ export function TourDetailsPage() {
               <h2>Reserve your journey</h2>
               <p>Sign in to select departure dates, book seats with transparent BDT pricing, and manage your tickets.</p>
               <button className="primary-btn" onClick={() => navigate('/login')}>
-                Sign in to book <ArrowUpRight size={15} />
+                Sign in to book <ArrowUpRight size={16} />
               </button>
               <button className="outline-btn" onClick={() => navigate('/register')}>
                 Create free account
@@ -294,19 +294,21 @@ export function TourDetailsPage() {
       {selectedDeparture && (
         <div className="modal-backdrop" onClick={() => setSelectedDeparture(null)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setSelectedDeparture(null)}>×</button>
+            <button className="modal-close" onClick={() => setSelectedDeparture(null)} aria-label="Close reservation modal">
+              <X size={18} />
+            </button>
 
             <span className="eyebrow" style={{ color: 'var(--green)' }}>Confirm Reservation</span>
             <h2>Book Tour Departure</h2>
-            <p style={{ fontSize: '12px', color: '#6d7770', margin: '4px 0 16px' }}>
+            <p style={{ fontSize: '13.5px', color: '#4e5e52', margin: '4px 0 16px', lineHeight: 1.5 }}>
               {tour.title} · {formatDate(selectedDeparture.start_date)} to {formatDate(selectedDeparture.end_date)}
             </p>
 
             {bookingSuccess ? (
               <div style={{ textAlign: 'center', padding: '16px 0' }}>
                 <div className="modal-icon" style={{ margin: '0 auto 12px' }}><Check size={20} /></div>
-                <h3 style={{ color: 'var(--green)' }}>Booking Successful!</h3>
-                <p style={{ fontSize: '12px', margin: '6px 0 18px', color: '#556b5b' }}>{bookingSuccess}</p>
+                <h3 style={{ color: 'var(--green)', fontSize: '18px', fontWeight: 600 }}>Booking Successful!</h3>
+                <p style={{ fontSize: '14px', margin: '6px 0 18px', color: '#2d5538', lineHeight: 1.5 }}>{bookingSuccess}</p>
                 <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
                   <button className="primary-btn" onClick={() => navigate('/my-bookings')}>View My Bookings</button>
                   <button className="outline-btn" onClick={() => setSelectedDeparture(null)}>Done</button>
@@ -324,12 +326,12 @@ export function TourDetailsPage() {
                   />
                 </label>
 
-                <div style={{ background: '#f6faf4', padding: '12px', borderRadius: '8px', margin: '14px 0' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '6px' }}>
+                <div style={{ background: '#f6faf4', padding: '14px', borderRadius: '8px', margin: '16px 0' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13.5px', marginBottom: '8px', color: '#4e5e52' }}>
                     <span>Price per traveler:</span>
-                    <strong>{formatBDT(tour.price)}</strong>
+                    <strong style={{ color: '#1a2e22' }}>{formatBDT(tour.price)}</strong>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', borderTop: '1px solid #dfe7dc', paddingTop: '6px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px', borderTop: '1px solid #dfe7dc', paddingTop: '8px' }}>
                     <strong>Total BDT:</strong>
                     <strong style={{ color: 'var(--green-dark)' }}>{formatBDT(tour.price * travelersCount)}</strong>
                   </div>
@@ -337,7 +339,7 @@ export function TourDetailsPage() {
 
                 {bookingError && <p className="error-text">{bookingError}</p>}
 
-                <div className="modal-actions" style={{ marginTop: '16px' }}>
+                <div className="modal-actions" style={{ marginTop: '20px' }}>
                   <button className="outline-btn" onClick={() => setSelectedDeparture(null)}>Cancel</button>
                   <button className="primary-btn" disabled={bookingLoading} onClick={handleBook}>
                     {bookingLoading ? 'Reserving…' : 'Confirm reservation'}

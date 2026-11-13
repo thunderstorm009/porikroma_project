@@ -85,7 +85,7 @@ export function SettingsTab({ trip, onRefresh }: SettingsTabProps) {
 
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '24px', borderTop: '1px solid var(--line)', paddingTop: '16px' }}>
         <button className="primary-btn" disabled={saving} onClick={save}>{saving ? 'Saving…' : 'Save changes'}</button>
-        <button className="danger-btn" onClick={deleteTrip}><Trash2 size={15} /> Delete trip</button>
+        <button className="danger-btn" onClick={deleteTrip}><Trash2 size={17} /> Delete trip</button>
       </div>
     </div>
   )

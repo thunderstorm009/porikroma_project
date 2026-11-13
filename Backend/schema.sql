@@ -257,8 +257,11 @@ CREATE TABLE IF NOT EXISTS trip_checklists (
   trip_id uuid NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
   title text NOT NULL,
   completed boolean NOT NULL DEFAULT false,
-  created_by uuid NOT NULL REFERENCES users(id)
+  created_by uuid NOT NULL REFERENCES users(id),
+  created_at timestamptz NOT NULL DEFAULT now()
 );
+
+ALTER TABLE trip_checklists ADD COLUMN IF NOT EXISTS created_at timestamptz NOT NULL DEFAULT now();
 
 CREATE TABLE IF NOT EXISTS trip_notes (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

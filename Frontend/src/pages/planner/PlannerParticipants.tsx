@@ -39,17 +39,17 @@ export function PlannerParticipants() {
                 <td><span className={`badge ${b.status === 'CONFIRMED' ? 'badge-green' : b.status === 'CANCELLED' ? 'badge-red' : 'badge-orange'}`}>{b.status}</span></td>
                 <td>
                   {b.status === 'PENDING' && (
-                    <button className="primary-btn" style={{ height: '28px', fontSize: '11px' }} onClick={() => updateStatus(b.id, 'CONFIRMED')}>Confirm</button>
+                    <button className="primary-btn small" onClick={() => updateStatus(b.id, 'CONFIRMED')}>Confirm</button>
                   )}
                   {b.status === 'CONFIRMED' && (
-                    <button className="danger-btn" style={{ height: '28px', fontSize: '11px' }} onClick={() => updateStatus(b.id, 'CANCELLED')}>Cancel</button>
+                    <button className="danger-btn small" onClick={() => updateStatus(b.id, 'CANCELLED')}>Cancel</button>
                   )}
                 </td>
               </tr>
             ))}
             {!bookings.length && (
               <tr>
-                <td colSpan={6} style={{ textAlign: 'center', padding: '36px', color: '#889' }}>
+                <td colSpan={6} style={{ textAlign: 'center', padding: '36px 16px', color: '#5a685e', fontSize: '14px' }}>
                   No booking reservations received yet.
                 </td>
               </tr>

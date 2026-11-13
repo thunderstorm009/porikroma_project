@@ -136,7 +136,7 @@ export function createDistrictIcon(visited: boolean, title?: string) {
 
   const html = `
     <div style="
-      background: #94a3b8;
+      background: #64748b;
       width: 10px;
       height: 10px;
       border-radius: 50%;

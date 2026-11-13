@@ -138,12 +138,12 @@ export function PlannerPage() {
               <div className="chat-messages" style={{ minHeight: '320px', maxHeight: '420px', overflowY: 'auto' }}>
                 {messages.map((m, idx) => (
                   <div className={`message ${m.sender === 'ASSISTANT' ? 'ai' : 'user'}`} key={m.id || idx}>
-                    <div className="message-avatar">{m.sender === 'ASSISTANT' ? <Sparkles size={14} /> : 'R'}</div>
+                    <div className="message-avatar">{m.sender === 'ASSISTANT' ? <Sparkles size={16} /> : 'R'}</div>
                     <div className="message-bubble" style={{ whiteSpace: 'pre-wrap' }}>
                       {m.body}
                       {m.sender === 'ASSISTANT' && (
                         <div className="message-actions">
-                          <button onClick={() => navigator.clipboard.writeText(m.body)}><Copy size={13} /> Copy</button>
+                          <button onClick={() => navigator.clipboard.writeText(m.body)}><Copy size={14} /> Copy</button>
                         </div>
                       )}
                     </div>
@@ -151,7 +151,7 @@ export function PlannerPage() {
                 ))}
                 {loading && (
                   <div className="message ai">
-                    <div className="message-avatar"><Sparkles size={14} /></div>
+                    <div className="message-avatar"><Sparkles size={16} /></div>
                     <div className="message-bubble">Synthesizing itinerary and regional advice…</div>
                   </div>
                 )}
@@ -164,7 +164,7 @@ export function PlannerPage() {
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
                 />
-                <button onClick={() => sendMessage()}><Send size={17} /></button>
+                <button onClick={() => sendMessage()} aria-label="Send message"><Send size={17} /></button>
               </div>
             </section>
           </div>

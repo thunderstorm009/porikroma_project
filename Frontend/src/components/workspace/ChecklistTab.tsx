@@ -58,7 +58,7 @@ export function ChecklistTab({ tripId, items, onRefresh }: ChecklistTabProps) {
 
       <div className="inline-add" style={{ margin: '16px 0' }}>
         <input placeholder="Add item (e.g. Waterproof hiking boots)..." value={title} onChange={(e) => setTitle(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && add()} />
-        <button className="primary-btn" onClick={add}><Plus size={15} /> Add</button>
+        <button className="primary-btn" onClick={add}><Plus size={17} /> Add</button>
       </div>
 
       <div>
@@ -66,15 +66,15 @@ export function ChecklistTab({ tripId, items, onRefresh }: ChecklistTabProps) {
           <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #edf0ea' }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', margin: 0 }}>
               <input type="checkbox" checked={item.completed} onChange={() => toggle(item.id, item.completed)} />
-              <span style={{ textDecoration: item.completed ? 'line-through' : 'none', color: item.completed ? '#889' : 'inherit' }}>
+              <span style={{ textDecoration: item.completed ? 'line-through' : 'none', color: item.completed ? '#506155' : 'inherit' }}>
                 {item.title}
               </span>
             </label>
-            <button className="icon-btn" onClick={() => deleteItem(item.id)}><Trash2 size={14} /></button>
+            <button className="icon-btn" onClick={() => deleteItem(item.id)} aria-label="Delete item"><Trash2 size={16} /></button>
           </div>
         ))}
         {!visible.length && (
-          <div style={{ padding: '24px', textAlign: 'center', color: '#889' }}>No checklist items in this view.</div>
+          <div style={{ padding: '24px', textAlign: 'center', color: '#506155' }}>No checklist items in this view.</div>
         )}
       </div>
     </div>

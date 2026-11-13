@@ -20,7 +20,7 @@ export function MyGroupsPage() {
         title="My expeditions"
         description="Groups you organize or have joined as a traveler."
         action={
-          <button className="primary-btn" onClick={() => navigate('/group-travel/create')}><Plus size={16} /> Host expedition</button>
+          <button className="primary-btn" onClick={() => navigate('/group-travel/create')}><Plus size={17} /> Host expedition</button>
         }
       />
 
@@ -37,19 +37,23 @@ export function MyGroupsPage() {
               <span className={`badge ${g.is_organizer ? 'badge-green' : 'badge-blue'}`}>
                 {g.is_organizer ? 'Host / Organizer' : 'Participant'}
               </span>
-              <h3 style={{ margin: '10px 0 6px' }}>{g.title}</h3>
-              <p><MapPin size={13} /> {g.destination_name} · {g.start_date} – {g.end_date}</p>
-              <p style={{ fontSize: '11px', color: '#6d7770' }}>Capacity: {g.member_count} of {g.capacity} spots filled</p>
+              <h3 style={{ margin: '10px 0 6px', fontSize: '17.5px', fontWeight: 600, color: '#1a2e22' }}>{g.title}</h3>
+              <p style={{ fontSize: '13.5px', color: '#4e5e52', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <MapPin size={15} /> {g.destination_name} · {g.start_date} – {g.end_date}
+              </p>
+              <p style={{ fontSize: '13px', color: '#5a685e', marginTop: '4px' }}>Capacity: {g.member_count} of {g.capacity} spots filled</p>
             </div>
             <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
               <button className="primary-btn" style={{ flex: 1, justifyContent: 'center' }} onClick={() => navigate(`/trips/${g.trip_id}`)}>
-                Open workspace <ArrowUpRight size={14} />
+                Open workspace <ArrowUpRight size={15} />
               </button>
             </div>
           </div>
         ))}
         {!groups.length && (
-          <div style={{ padding: '30px', color: '#889' }}>You have not joined or organized any group trips yet.</div>
+          <div style={{ padding: '36px 20px', color: '#5a685e', fontSize: '14.5px', textAlign: 'center' }}>
+            You have not joined or organized any group trips yet.
+          </div>
         )}
       </div>
     </div>

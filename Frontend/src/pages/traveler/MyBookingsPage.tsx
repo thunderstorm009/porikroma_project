@@ -146,12 +146,12 @@ export function MyBookingsPage() {
 
       {/* Loading state */}
       {loading && (
-        <div style={{ padding: '60px 20px', textAlign: 'center', color: '#6d7770' }}>
+        <div style={{ padding: '60px 20px', textAlign: 'center', color: '#506155' }}>
           <div className="avatar" style={{ width: '40px', height: '40px', margin: '0 auto 14px', background: '#e8efe5', color: 'var(--green)' }}>
             <Sparkles size={20} />
           </div>
           <strong>Loading your tour bookings…</strong>
-          <p style={{ fontSize: '12px', color: '#889', marginTop: '4px' }}>Fetching confirmed tickets, dates, and operator coordination</p>
+          <p style={{ fontSize: '13px', color: '#506155', marginTop: '4px' }}>Fetching confirmed tickets, dates, and operator coordination</p>
         </div>
       )}
 
@@ -160,7 +160,7 @@ export function MyBookingsPage() {
         <div className="panel" style={{ margin: '24px 0', textAlign: 'center', padding: '36px', border: '1px solid #f2dede', background: '#fff5f5' }}>
           <AlertCircle size={32} color="#d9534f" style={{ margin: '0 auto 10px' }} />
           <h2 style={{ fontSize: '16px', color: '#a94442' }}>Unable to load bookings</h2>
-          <p style={{ color: '#778', fontSize: '12px', margin: '6px 0 16px' }}>{error}</p>
+          <p style={{ color: '#506155', fontSize: '13px', margin: '6px 0 16px' }}>{error}</p>
           <button className="primary-btn" onClick={loadBookings}>Retry</button>
         </div>
       )}
@@ -169,7 +169,7 @@ export function MyBookingsPage() {
       {!loading && !error && (
         <>
           {filteredBookings.length > 0 ? (
-            <div className="table-container" style={{ background: '#fff', borderRadius: '12px', border: '1px solid var(--line)', overflow: 'hidden' }}>
+            <div className="table-container" style={{ background: '#fff', borderRadius: '12px', border: '1px solid var(--line)', overflowX: 'auto' }}>
               <table className="data-table">
                 <thead>
                   <tr>
@@ -207,29 +207,29 @@ export function MyBookingsPage() {
                             <div>
                               {b.tour_id ? (
                                 <Link to={`/tours/${b.tour_id}`} style={{ fontWeight: 600, color: 'var(--ink)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                  {b.tour_title || 'Commercial Tour Expedition'} <ArrowUpRight size={13} color="#889" />
+                                  {b.tour_title || 'Commercial Tour Expedition'} <ArrowUpRight size={14} color="var(--green)" />
                                 </Link>
                               ) : (
                                 <strong style={{ color: 'var(--ink)' }}>{b.tour_title || 'Commercial Tour Expedition'}</strong>
                               )}
-                              <p style={{ fontSize: '11px', color: '#6e7a72', margin: '2px 0 0', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                <MapPin size={11} /> {b.destination_name || 'Bangladesh'}
+                              <p style={{ fontSize: '13px', color: '#5a685e', margin: '2px 0 0', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                <MapPin size={13} /> {b.destination_name || 'Bangladesh'}
                                 {b.district && ` · ${b.district}`}
                               </p>
                               {b.planner_name && (
-                                <small style={{ fontSize: '10px', color: '#889' }}>Host: {b.planner_name}</small>
+                                <small style={{ fontSize: '12px', color: '#506155' }}>Host: {b.planner_name}</small>
                               )}
                             </div>
                           </div>
                         </td>
 
                         <td>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <CalendarDays size={14} color="var(--green)" />
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <CalendarDays size={15} color="var(--green)" />
                             <div>
                               <strong>{b.start_date ? formatDate(b.start_date) : 'Flexible'}</strong>
                               {b.end_date && (
-                                <div style={{ fontSize: '11px', color: '#7a857e' }}>
+                                <div style={{ fontSize: '12px', color: '#506155' }}>
                                   to {formatDate(b.end_date)}
                                 </div>
                               )}
@@ -238,21 +238,21 @@ export function MyBookingsPage() {
                         </td>
 
                         <td>
-                          <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px' }}>
-                            <Users size={14} color="#7a857e" />
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '14px' }}>
+                            <Users size={15} color="#506155" />
                             <strong>{travelers}</strong> {travelers === 1 ? 'seat' : 'seats'}
                           </span>
                         </td>
 
                         <td>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <Banknote size={14} color="var(--green)" />
-                            <strong style={{ color: 'var(--green-dark)', fontSize: '14px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            <Banknote size={15} color="var(--green)" />
+                            <strong style={{ color: 'var(--green-dark)', fontSize: '15px' }}>
                               {formatBDT(totalBDT)}
                             </strong>
                           </div>
                           {travelers > 1 && unitPrice > 0 && (
-                            <small style={{ fontSize: '10px', color: '#889' }}>
+                            <small style={{ fontSize: '12px', color: '#506155' }}>
                               ({formatBDT(unitPrice)}/seat)
                             </small>
                           )}
@@ -260,18 +260,18 @@ export function MyBookingsPage() {
 
                         <td>
                           {b.status === 'CONFIRMED' && (
-                            <span className="badge badge-green" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                              <CheckCircle2 size={11} /> Confirmed
+                            <span className="badge badge-green" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                              <CheckCircle2 size={13} /> Confirmed
                             </span>
                           )}
                           {b.status === 'PENDING' && (
-                            <span className="badge badge-orange" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                              <Clock size={11} /> Pending confirmation
+                            <span className="badge badge-orange" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                              <Clock size={13} /> Pending confirmation
                             </span>
                           )}
                           {b.status === 'CANCELLED' && (
-                            <span className="badge badge-red" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                              <XCircle size={11} /> Cancelled
+                            <span className="badge badge-red" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                              <XCircle size={13} /> Cancelled
                             </span>
                           )}
                           {b.status === 'COMPLETED' && (
@@ -310,10 +310,10 @@ export function MyBookingsPage() {
               </table>
             </div>
           ) : (
-            <div className="panel" style={{ margin: '30px 0', padding: '48px 24px', textAlign: 'center', color: '#778' }}>
+            <div className="panel" style={{ margin: '30px 0', padding: '48px 24px', textAlign: 'center', color: '#5a685e' }}>
               <Ticket size={40} color="var(--green)" style={{ margin: '0 auto 12px' }} />
               <h2>No reservations found</h2>
-              <p style={{ fontSize: '13px', margin: '6px 0 18px', maxWidth: '440px', marginLeft: 'auto', marginRight: 'auto' }}>
+              <p style={{ fontSize: '14.5px', color: '#5a685e', margin: '6px 0 20px', maxWidth: '460px', marginLeft: 'auto', marginRight: 'auto' }}>
                 {filter === 'ALL'
                   ? 'You have not booked any scheduled commercial tour departures yet.'
                   : `No ${filter.toLowerCase()} tour bookings found.`}

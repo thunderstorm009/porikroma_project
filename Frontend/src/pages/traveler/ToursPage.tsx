@@ -106,7 +106,7 @@ export function ToursPage() {
         <select
           value={selectedDestination}
           onChange={(e) => setSelectedDestination(e.target.value)}
-          style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--line)', fontSize: '12px' }}
+          style={{ padding: '0 36px 0 14px', height: '44px', borderRadius: '8px', border: '1px solid var(--line-strong)', fontSize: '16px' }}
         >
           <option value="All">All destinations</option>
           {destinations.map((d) => (
@@ -117,7 +117,7 @@ export function ToursPage() {
         <select
           value={priceSort}
           onChange={(e) => setPriceSort(e.target.value as any)}
-          style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--line)', fontSize: '12px' }}
+          style={{ padding: '0 36px 0 14px', height: '44px', borderRadius: '8px', border: '1px solid var(--line-strong)', fontSize: '16px' }}
         >
           <option value="default">Sort by: Default</option>
           <option value="asc">Price: Low to High</option>
@@ -127,7 +127,7 @@ export function ToursPage() {
         <select
           value={durationFilter}
           onChange={(e) => setDurationFilter(e.target.value as any)}
-          style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--line)', fontSize: '12px' }}
+          style={{ padding: '0 36px 0 14px', height: '44px', borderRadius: '8px', border: '1px solid var(--line-strong)', fontSize: '16px' }}
         >
           <option value="all">Any duration</option>
           <option value="short">Short (1–3 days)</option>
@@ -138,12 +138,12 @@ export function ToursPage() {
 
       {/* Loading state */}
       {loading && (
-        <div style={{ padding: '60px 20px', textAlign: 'center', color: '#6d7770' }}>
+        <div style={{ padding: '60px 20px', textAlign: 'center', color: '#506155' }}>
           <div className="avatar" style={{ width: '40px', height: '40px', margin: '0 auto 14px', background: '#e8efe5', color: 'var(--green)' }}>
             <Sparkles size={20} />
           </div>
           <strong>Discovering curated tour packages…</strong>
-          <p style={{ fontSize: '12px', color: '#889', marginTop: '4px' }}>Connecting to verified tour planners across Bangladesh</p>
+          <p style={{ fontSize: '13px', color: '#506155', marginTop: '4px' }}>Connecting to verified tour planners across Bangladesh</p>
         </div>
       )}
 
@@ -152,7 +152,7 @@ export function ToursPage() {
         <div className="panel" style={{ margin: '24px 0', textAlign: 'center', padding: '36px', border: '1px solid #f2dede', background: '#fff5f5' }}>
           <AlertCircle size={32} color="#d9534f" style={{ margin: '0 auto 10px' }} />
           <h2 style={{ fontSize: '16px', color: '#a94442' }}>Unable to load tours</h2>
-          <p style={{ color: '#778', fontSize: '12px', margin: '6px 0 16px' }}>{error}</p>
+          <p style={{ color: '#506155', fontSize: '13px', margin: '6px 0 16px' }}>{error}</p>
           <button className="primary-btn" onClick={loadTours}>Retry</button>
         </div>
       )}
@@ -160,7 +160,7 @@ export function ToursPage() {
       {/* Tours Grid */}
       {!loading && !error && (
         <>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '20px 0 12px', fontSize: '12px', color: '#77827a' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '20px 0 12px', fontSize: '13px', color: '#506155' }}>
             <span>Showing <strong>{filteredAndSortedTours.length}</strong> available tour package{filteredAndSortedTours.length === 1 ? '' : 's'}</span>
           </div>
 
@@ -181,33 +181,33 @@ export function ToursPage() {
                   <div className="destination-discovery-body">
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                       <span className="recommendation-reason">
-                        <ShieldCheck size={12} /> Verified Planner · {tour.planner_name || 'Expedition Host'}
+                        <ShieldCheck size={14} /> Verified Planner · {tour.planner_name || 'Expedition Host'}
                       </span>
-                      <span className="badge badge-green" style={{ fontSize: '10px' }}>
-                        <Clock size={10} style={{ marginRight: '3px' }} /> {days} Day{days > 1 ? 's' : ''}
+                      <span className="badge badge-green" style={{ fontSize: '12px', display: 'inline-flex', alignItems: 'center' }}>
+                        <Clock size={13} style={{ marginRight: '4px' }} /> {days} Day{days > 1 ? 's' : ''}
                       </span>
                     </div>
 
-                    <h3 style={{ fontSize: '16px', margin: '4px 0 6px' }}>{tour.title}</h3>
+                    <h3 style={{ fontSize: '17.5px', margin: '4px 0 6px' }}>{tour.title}</h3>
                     <p className="destination-location">
-                      <MapPin size={13} /> {tour.destination_name} · {tour.district || tour.division || 'Bangladesh'}
+                      <MapPin size={14} /> {tour.destination_name} · {tour.district || tour.division || 'Bangladesh'}
                     </p>
-                    <p style={{ fontSize: '12px', color: '#68756d', margin: '6px 0 12px', lineHeight: 1.4 }}>
+                    <p style={{ fontSize: '13.5px', color: '#4e5e52', margin: '6px 0 12px', lineHeight: 1.5 }}>
                       {tour.description}
                     </p>
 
                     <div className="destination-facts" style={{ borderTop: '1px solid #edf0ea', paddingTop: '10px' }}>
                       <span>
-                        <Banknote size={13} /> {formatBDT(tour.price)} <small style={{ color: '#889', fontSize: '10px' }}>/ person</small>
+                        <Banknote size={14} /> {formatBDT(tour.price)} <small style={{ color: '#5a685e', fontSize: '12px' }}>/ person</small>
                       </span>
                       <span>
-                        <CalendarDays size={13} /> {tour.departures_count || 0} scheduled departure{(tour.departures_count || 0) === 1 ? '' : 's'}
+                        <CalendarDays size={14} /> {tour.departures_count || 0} scheduled departure{(tour.departures_count || 0) === 1 ? '' : 's'}
                       </span>
                     </div>
 
                     <div className="destination-card-actions" style={{ marginTop: '12px' }}>
                       <button className="primary-btn small" onClick={() => navigate(`/tours/${tour.id}`)} style={{ width: '100%', justifyContent: 'center' }}>
-                        View dossier & dates <ArrowUpRight size={14} />
+                        View dossier & dates <ArrowUpRight size={15} />
                       </button>
                     </div>
                   </div>
@@ -218,10 +218,10 @@ export function ToursPage() {
 
           {/* Empty state */}
           {!filteredAndSortedTours.length && (
-            <div className="panel" style={{ margin: '30px 0', padding: '48px 24px', textAlign: 'center', color: '#778' }}>
+            <div className="panel" style={{ margin: '30px 0', padding: '48px 24px', textAlign: 'center', color: '#5a685e' }}>
               <Luggage size={36} color="var(--green)" style={{ margin: '0 auto 12px' }} />
               <h2>No tours match your criteria</h2>
-              <p style={{ fontSize: '12px', margin: '6px 0 16px' }}>
+              <p style={{ fontSize: '14px', color: '#5a685e', margin: '6px 0 18px' }}>
                 Try adjusting your search query, price sort, or destination filter.
               </p>
               <button

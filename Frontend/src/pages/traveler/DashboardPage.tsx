@@ -4,6 +4,7 @@ import { Plus, Sparkles, ArrowUpRight, MapPin, Compass, Wallet, TrendingUp, Chev
 import { api } from '../../api'
 import type { Destination, Trip, User } from '../../types'
 import { PageHeader } from '../../components/common/PageHeader'
+import { WeatherWidget } from '../../components/common/WeatherWidget'
 
 export function DashboardPage() {
   const navigate = useNavigate()
@@ -33,6 +34,9 @@ export function DashboardPage() {
 
   const upcomingTrips = trips.filter((t) => t.status === 'UPCOMING' || t.status === 'PLANNING')
   const totalBudget = trips.reduce((sum, t) => sum + Number(t.budget || 0), 0)
+  const totalSpent = expensesOverview?.totalSpent ?? 0
+  const planningProgress = totalBudget > 0 ? Math.min(Math.round((totalSpent / totalBudget) * 100), 100) : 0
+  const nextTrip = upcomingTrips[0]
 
   return (
     <div className="page">
@@ -49,7 +53,7 @@ export function DashboardPage() {
 
       <section className="hero-card">
         <div className="hero-copy">
-          <span className="pill light"><Sparkles size={13} /> Porikroma pick</span>
+          <span className="pill light"><Sparkles size={14} /> Porikroma pick</span>
           <h2>Go where the<br /><em>air feels different.</em></h2>
           <p>Let a little curiosity lead the way. Explore slow travel, hidden trails, and plans made just for you.</p>
           <button className="light-btn" onClick={() => navigate('/destinations')}>
@@ -60,17 +64,17 @@ export function DashboardPage() {
           <div className="sun" />
           <div className="mountain mountain-back" />
           <div className="mountain mountain-front" />
-          <div className="hero-caption"><MapPin size={14} /> Sajek Valley, Bangladesh</div>
+          <div className="hero-caption"><MapPin size={15} /> Sajek Valley, Bangladesh</div>
         </div>
       </section>
 
       <div className="section-header">
         <div>
           <h2 className="section-title">Your journey at a glance</h2>
-          <p className="muted">Backed by PostgreSQL records for your account.</p>
+          <p className="muted">Live records for your account.</p>
         </div>
         <button className="text-btn" onClick={() => navigate('/trips')}>
-          View all trips <ArrowUpRight size={15} />
+          View all trips <ArrowUpRight size={16} />
         </button>
       </div>
 
@@ -83,21 +87,21 @@ export function DashboardPage() {
         </div>
         <div className="stat-card">
           <div className="stat-icon blue"><MapPin /></div>
-          <strong>{footprint?.districtsVisited ?? 4}</strong>
+          <strong>{footprint?.districtsVisited ?? 0}</strong>
           <span>Districts explored</span>
-          <small>Across Bangladesh</small>
+          <small>Across 64 Bangladesh districts</small>
         </div>
         <div className="stat-card">
           <div className="stat-icon green"><Wallet /></div>
-          <strong>৳ {(expensesOverview?.totalSpent || 24500).toLocaleString()}</strong>
+          <strong>৳ {totalSpent.toLocaleString()}</strong>
           <span>Total expenses</span>
-          <small>Of ৳ {(totalBudget || 32700).toLocaleString()} budgeted</small>
+          <small>Of ৳ {totalBudget.toLocaleString()} budgeted</small>
         </div>
         <div className="stat-card">
           <div className="stat-icon purple"><TrendingUp /></div>
-          <strong>88%</strong>
-          <span>Planning progress</span>
-          <small>You’re on track</small>
+          <strong>{planningProgress}%</strong>
+          <span>Budget utilized</span>
+          <small>{totalBudget > 0 ? 'Tracking smoothly' : 'Add a trip budget'}</small>
         </div>
       </div>
 
@@ -116,7 +120,7 @@ export function DashboardPage() {
                 <img src={trip.destination_image || 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800&q=85'} alt="" />
                 <div className="trip-row-copy">
                   <strong>{trip.name}</strong>
-                  <span><MapPin size={12} /> {trip.destination_name}</span>
+                  <span><MapPin size={14} /> {trip.destination_name}</span>
                   <small>{trip.start_date} – {trip.end_date}</small>
                 </div>
                 <span className={`status ${trip.status === 'UPCOMING' ? 'coral' : 'blue'}`}>{trip.status}</span>
@@ -124,39 +128,43 @@ export function DashboardPage() {
               </button>
             ))}
             {!upcomingTrips.length && (
-              <div style={{ padding: '24px', textAlign: 'center', color: '#778' }}>
+              <div style={{ padding: '32px 20px', textAlign: 'center', color: '#5a685e', fontSize: '14px' }}>
                 No upcoming trips planned yet. <Link to="/trips/create" style={{ color: 'var(--green)', fontWeight: 600 }}>Create your first trip</Link>
               </div>
             )}
           </div>
-          <button className="panel-link" onClick={() => navigate('/trips')}>See all trips <ChevronRight size={15} /></button>
+          <button className="panel-link" onClick={() => navigate('/trips')}>See all trips <ChevronRight size={16} /></button>
         </section>
 
-        <section className="panel weather-panel">
-          <div className="panel-heading">
+        {/* Live Weather Forecast Panel */}
+        <section className="panel" style={{ padding: '20px' }}>
+          <div className="panel-heading" style={{ marginBottom: '14px' }}>
             <div>
               <h2>Right now</h2>
-              <p>Weather in your upcoming destination</p>
+              <p>
+                {nextTrip
+                  ? `Weather for your upcoming trip to ${nextTrip.destination_name || 'destination'}`
+                  : 'Live regional weather overview'}
+              </p>
             </div>
             <span className="status green">Live</span>
           </div>
-          <div className="weather-main">
-            <span className="weather-icon">☀</span>
-            <div>
-              <strong>29°</strong>
-              <span>Mostly sunny</span>
-            </div>
-            <div className="weather-place"><MapPin size={14} /> Cox’s Bazar</div>
-          </div>
-          <div className="forecast">
-            <div><span>FRI</span><b>☀</b><strong>28°</strong></div>
-            <div><span>SAT</span><b>⛅</b><strong>27°</strong></div>
-            <div><span>SUN</span><b>☀</b><strong>29°</strong></div>
-            <div><span>MON</span><b>🌦</b><strong>26°</strong></div>
-          </div>
-          <button className="panel-link" onClick={() => alert('Forecast: Mild coastal breeze, low humidity, perfect for sunrise walks.')}>
-            View full forecast <ChevronRight size={15} />
-          </button>
+
+          <WeatherWidget
+            destinationId={nextTrip?.destination_id}
+            destinationName={nextTrip?.destination_name || 'Cox’s Bazar'}
+            datesLabel={nextTrip ? `${nextTrip.start_date} – ${nextTrip.end_date}` : 'Current seasonal conditions'}
+          />
+
+          {nextTrip && (
+            <button
+              className="panel-link"
+              style={{ marginTop: '14px' }}
+              onClick={() => navigate(`/trips/${nextTrip.id}`)}
+            >
+              Open {nextTrip.name} workspace <ChevronRight size={16} />
+            </button>
+          )}
         </section>
       </div>
 
@@ -166,7 +174,7 @@ export function DashboardPage() {
           <h2 className="section-title">Places for your next chapter</h2>
         </div>
         <button className="text-btn" onClick={() => navigate('/destinations')}>
-          Explore all destinations <ArrowUpRight size={15} />
+          Explore all destinations <ArrowUpRight size={16} />
         </button>
       </div>
 
@@ -175,13 +183,12 @@ export function DashboardPage() {
           <article className="recommendation-card" key={dest.id}>
             <img src={dest.image || 'https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=800&q=85'} alt={dest.name} />
             <div className="recommendation-copy">
-              <span className="recommendation-reason"><Sparkles size={12} /> Recommended for you</span>
+              <span className="recommendation-reason"><Sparkles size={14} /> Recommended for you</span>
               <h3>{dest.name}</h3>
               <p className="recommendation-meta">{dest.district} · {dest.division}</p>
-              <p>{dest.description}</p>
               <div className="recommendation-footer">
-                <span><Banknote size={13} /> From ৳ {dest.estimated_budget?.toLocaleString()}</span>
-                <button onClick={() => navigate(`/destinations/${dest.id}`)}>Explore <ArrowUpRight size={14} /></button>
+                <span><Banknote size={14} /> From ৳ {dest.estimated_budget?.toLocaleString()}</span>
+                <button onClick={() => navigate(`/destinations/${dest.id}`)}>Explore place <ArrowUpRight size={15} /></button>
               </div>
             </div>
           </article>

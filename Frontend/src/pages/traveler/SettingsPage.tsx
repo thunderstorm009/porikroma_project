@@ -65,7 +65,7 @@ export function SettingsPage() {
                 <select
                   value={val}
                   onChange={(e) => setPrivacy({ ...privacy, [key]: e.target.value })}
-                  style={{ width: '140px', padding: '6px 10px', borderRadius: '6px', border: '1px solid var(--line)' }}>
+                  style={{ width: '140px', padding: '6px 10px', borderRadius: '6px', border: '1px solid var(--line-strong)', fontSize: '16px', background: '#fff' }}>
                   <option value="PUBLIC">PUBLIC</option>
                   <option value="PRIVATE">PRIVATE</option>
                 </select>

@@ -58,7 +58,7 @@ export function TripsPage() {
           ))}
         </div>
         <div className="group-filter" style={{ maxWidth: '300px' }}>
-          <Search size={15} />
+          <Search size={16} />
           <input placeholder="Search trips or places..." value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
       </div>
@@ -71,34 +71,34 @@ export function TripsPage() {
               <span className={`status ${trip.status === 'UPCOMING' ? 'coral' : trip.status === 'COMPLETED' ? 'green' : 'blue'}`}>
                 {trip.status}
               </span>
-              <button className="image-more" onClick={(e) => { e.stopPropagation(); deleteTrip(trip.id, trip.name) }} title="Delete trip">
+              <button className="image-more" onClick={(e) => { e.stopPropagation(); deleteTrip(trip.id, trip.name) }} title="Delete trip" aria-label="Delete trip">
                 <Trash2 size={16} />
               </button>
             </div>
             <div className="trip-card-body">
               <h3>{trip.name}</h3>
-              <p><MapPin size={14} /> {trip.destination_name}</p>
+              <p><MapPin size={15} /> {trip.destination_name}</p>
               <div className="trip-card-meta">
-                <span><CalendarDays size={14} /> {trip.start_date} – {trip.end_date}</span>
-                <span><Banknote size={14} /> ৳ {Number(trip.budget).toLocaleString()}</span>
+                <span><CalendarDays size={15} /> {trip.start_date} – {trip.end_date}</span>
+                <span><Banknote size={15} /> ৳ {Number(trip.budget).toLocaleString()}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
-                <span className="card-link">Open workspace <ArrowUpRight size={15} /></span>
-                <span style={{ fontSize: '11px', color: '#79857c' }}>{trip.member_count || 1} traveler{(trip.member_count || 1) > 1 ? 's' : ''}</span>
+                <span className="card-link">Open workspace <ArrowUpRight size={16} /></span>
+                <span style={{ fontSize: '12.5px', color: '#5a685e', fontWeight: 500 }}>{trip.member_count || 1} traveler{(trip.member_count || 1) > 1 ? 's' : ''}</span>
               </div>
             </div>
           </article>
         ))}
 
         <button className="new-trip-card" onClick={() => navigate('/trips/create')}>
-          <span><Plus size={21} /></span>
+          <span><Plus size={24} /></span>
           <strong>Start planning something new</strong>
           <small>Turn a daydream into a real journey.</small>
         </button>
       </div>
 
       {!loading && !filtered.length && (
-        <div style={{ padding: '40px', textAlign: 'center', color: '#778' }}>
+        <div style={{ padding: '48px 20px', textAlign: 'center', color: '#5a685e', fontSize: '14.5px' }}>
           No trips found matching the selected filter.
         </div>
       )}

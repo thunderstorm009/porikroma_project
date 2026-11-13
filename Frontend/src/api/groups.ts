@@ -1,5 +1,5 @@
 import { api } from './client'
-import type { GroupExpedition } from '../types'
+import type { GroupExpedition, GroupApplication } from '../types'
 
 export const groupsApi = {
   getGroups: () =>
@@ -22,6 +22,9 @@ export const groupsApi = {
       method: 'POST',
       body: JSON.stringify(answers),
     }),
+
+  getGroupApplications: (groupId: string) =>
+    api<GroupApplication[]>(`/api/groups/${groupId}/applications`),
 
   getMyApplications: () =>
     api<{ id: string; group_title: string; organizer_name: string; status: string; destination_name: string }[]>('/api/me/group-applications'),

@@ -42,7 +42,7 @@ export function AdminUsers() {
                   <select
                     value={u.role}
                     onChange={(e) => changeRole(u.id, e.target.value)}
-                    style={{ padding: '4px 8px', borderRadius: '4px', border: '1px solid var(--line)', fontSize: '11px' }}>
+                    style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid var(--line-strong)', fontSize: '14px', background: '#fff', height: '38px', minHeight: '38px' }}>
                     <option value="TRAVELER">TRAVELER</option>
                     <option value="TOUR_PLANNER">TOUR_PLANNER</option>
                     <option value="ADMIN">ADMIN</option>
@@ -54,9 +54,9 @@ export function AdminUsers() {
                 <td>{u.trips_count}</td>
                 <td>
                   {u.status !== 'SUSPENDED' ? (
-                    <button className="danger-btn" style={{ height: '26px', fontSize: '10px' }} onClick={() => changeStatus(u.id, 'SUSPENDED')}>Suspend</button>
+                    <button className="danger-btn small" onClick={() => changeStatus(u.id, 'SUSPENDED')}>Suspend</button>
                   ) : (
-                    <button className="primary-btn" style={{ height: '26px', fontSize: '10px' }} onClick={() => changeStatus(u.id, 'ACTIVE')}>Activate</button>
+                    <button className="primary-btn small" onClick={() => changeStatus(u.id, 'ACTIVE')}>Activate</button>
                   )}
                 </td>
               </tr>

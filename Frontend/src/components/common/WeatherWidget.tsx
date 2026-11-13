@@ -58,19 +58,19 @@ export function WeatherWidget({
           background: '#f8faf6',
           borderRadius: '10px',
           border: '1px solid #e2ece0',
-          fontSize: '12px',
-          color: '#6d7770',
+          fontSize: '13px',
+          color: '#5a685e',
           display: 'flex',
           alignItems: 'center',
           gap: '10px',
         }}
       >
-        <CloudSun size={18} color="#889988" />
+        <CloudSun size={18} color="#506155" />
         <div>
           <span style={{ fontWeight: 600, color: '#3d4d42', display: 'block' }}>
             Weather forecast unavailable
           </span>
-          <span style={{ fontSize: '11px' }}>
+          <span style={{ fontSize: '12.5px', color: '#5a685e' }}>
             Live weather could not be retrieved for {destinationName || 'this destination'}.
           </span>
         </div>
@@ -87,8 +87,8 @@ export function WeatherWidget({
           background: '#f8faf6',
           borderRadius: '10px',
           border: '1px solid #e2ece0',
-          fontSize: '12px',
-          color: '#889988',
+          fontSize: '13.5px',
+          color: '#5a685e',
         }}
       >
         <p style={{ margin: 0 }}>Checking regional weather forecast…</p>
@@ -112,7 +112,7 @@ export function WeatherWidget({
           background: 'rgba(255, 255, 255, 0.85)',
           borderRadius: '8px',
           border: '1px solid #dbe6d9',
-          fontSize: '12px',
+          fontSize: '13px',
         }}
       >
         {current.icon ? (
@@ -128,10 +128,10 @@ export function WeatherWidget({
           <CloudSun size={18} color="#15803d" />
         )}
         <div>
-          <strong style={{ fontSize: '13px', color: '#1a3324' }}>
+          <strong style={{ fontSize: '14px', color: '#1a3324' }}>
             {Math.round(current.temp)}°C
           </strong>{' '}
-          <span style={{ color: '#556557' }}>· {current.description}</span>
+          <span style={{ color: '#4e5e52' }}>· {current.description}</span>
         </div>
       </div>
     )
@@ -143,8 +143,8 @@ export function WeatherWidget({
       style={{
         background: 'linear-gradient(135deg, #ffffff 0%, #f7faf5 100%)',
         border: '1px solid #d5e3d2',
-        borderRadius: '10px',
-        padding: '16px',
+        borderRadius: '12px',
+        padding: '18px',
       }}
     >
       <div
@@ -160,13 +160,13 @@ export function WeatherWidget({
         <div>
           <span
             className="badge badge-green"
-            style={{ fontSize: '10px', padding: '2px 8px', marginBottom: '4px' }}
+            style={{ fontSize: '12px', padding: '2px 8px', marginBottom: '4px' }}
           >
             {location.name || destinationName || 'Regional Forecast'}
           </span>
           <h3
             style={{
-              fontSize: '15px',
+              fontSize: '16.5px',
               fontWeight: 700,
               color: '#1a3324',
               margin: '3px 0 0',
@@ -175,25 +175,26 @@ export function WeatherWidget({
               gap: '6px',
             }}
           >
-            <CloudSun size={17} color="#15803d" /> Destination Weather
+            <CloudSun size={18} color="#15803d" /> Destination Weather
           </h3>
           {datesLabel && (
             <small
               style={{
-                color: '#6d7770',
+                color: '#5a685e',
+                fontSize: '12.5px',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '4px',
+                gap: '5px',
                 marginTop: '3px',
               }}
             >
-              <Calendar size={12} /> {datesLabel}
+              <Calendar size={14} /> {datesLabel}
             </small>
           )}
         </div>
 
         {source === 'fallback' && (
-          <span style={{ fontSize: '10px', color: '#889988', fontStyle: 'italic' }}>
+          <span style={{ fontSize: '12px', color: '#5a685e', fontStyle: 'italic' }}>
             Seasonal estimate
           </span>
         )}
@@ -227,23 +228,23 @@ export function WeatherWidget({
             <span style={{ fontSize: '26px', fontWeight: 800, color: '#163824', lineHeight: 1 }}>
               {Math.round(current.temp)}°C
             </span>
-            <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#445547', fontWeight: 500 }}>
+            <p style={{ margin: '2px 0 0', fontSize: '13.5px', color: '#334438', fontWeight: 500 }}>
               {current.description}
             </p>
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '16px', fontSize: '11px', color: '#6d7770' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <Thermometer size={14} color="#059669" />
+        <div style={{ display: 'flex', gap: '16px', fontSize: '13px', color: '#4e5e52' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <Thermometer size={15} color="#059669" />
             <span>Feels: <strong>{Math.round(current.feelsLike)}°C</strong></span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <Droplets size={14} color="#0284c7" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <Droplets size={15} color="#0284c7" />
             <span>Humidity: <strong>{current.humidity}%</strong></span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <Wind size={14} color="#64748b" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <Wind size={15} color="#64748b" />
             <span>Wind: <strong>{current.windSpeed} m/s</strong></span>
           </div>
         </div>
@@ -254,10 +255,10 @@ export function WeatherWidget({
         <div>
           <p
             style={{
-              fontSize: '11px',
+              fontSize: '12px',
               fontWeight: 600,
               textTransform: 'uppercase',
-              color: '#6d7770',
+              color: '#4e5e52',
               margin: '0 0 8px',
               letterSpacing: '0.5px',
             }}
@@ -283,10 +284,10 @@ export function WeatherWidget({
                   border: '1px solid #e5ede3',
                 }}
               >
-                <strong style={{ fontSize: '11px', display: 'block', color: '#1f3d2b' }}>
+                <strong style={{ fontSize: '12.5px', display: 'block', color: '#1f3d2b' }}>
                   {day.day}
                 </strong>
-                <small style={{ fontSize: '9px', color: '#889988' }}>
+                <small style={{ fontSize: '12px', color: '#5a685e' }}>
                   {day.date.slice(5)}
                 </small>
                 <div style={{ margin: '2px 0' }}>
@@ -299,13 +300,13 @@ export function WeatherWidget({
                     }}
                   />
                 </div>
-                <div style={{ fontSize: '11px', fontWeight: 700, color: '#1a3324' }}>
-                  {Math.round(day.tempMax)}° <span style={{ color: '#889988', fontWeight: 400 }}>{Math.round(day.tempMin)}°</span>
+                <div style={{ fontSize: '13px', fontWeight: 700, color: '#1a3324' }}>
+                  {Math.round(day.tempMax)}° <span style={{ color: '#5a685e', fontWeight: 400 }}>{Math.round(day.tempMin)}°</span>
                 </div>
                 <small
                   style={{
-                    fontSize: '9px',
-                    color: '#6d7770',
+                    fontSize: '11.5px',
+                    color: '#5a685e',
                     display: 'block',
                     marginTop: '2px',
                     whiteSpace: 'nowrap',

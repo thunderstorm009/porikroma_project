@@ -38,13 +38,13 @@ export function NotesTab({ tripId, notes, onRefresh }: NotesTabProps) {
 
       <div style={{ margin: '14px 0' }}>
         <textarea
-          style={{ width: '100%', borderRadius: '8px', border: '1px solid var(--line)', padding: '10px', fontSize: '12px' }}
+          style={{ width: '100%', borderRadius: '8px', border: '1px solid var(--line)', padding: '12px 14px', fontSize: '16px', boxSizing: 'border-box' }}
           placeholder="Write a note, reminder, or transport detail..."
           rows={3}
           value={body}
           onChange={(e) => setBody(e.target.value)}
         />
-        <button className="primary-btn" style={{ marginTop: '8px' }} onClick={save}><Plus size={15} /> Save note</button>
+        <button className="primary-btn" style={{ marginTop: '8px' }} onClick={save}><Plus size={17} /> Save note</button>
       </div>
 
       <div style={{ marginTop: '20px' }}>
@@ -52,13 +52,13 @@ export function NotesTab({ tripId, notes, onRefresh }: NotesTabProps) {
           <div key={n.id} style={{ background: '#fcfdfa', border: '1px solid #edf0ea', borderRadius: '8px', padding: '14px', marginBottom: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
               <p style={{ margin: 0, fontSize: '13px', lineHeight: 1.5 }}>{n.body}</p>
-              <small style={{ color: '#889', marginTop: '6px', display: 'block' }}>{n.author_name || 'You'} · {new Date(n.created_at).toLocaleDateString()}</small>
+              <small style={{ color: '#506155', marginTop: '6px', display: 'block' }}>{n.author_name || 'You'} · {new Date(n.created_at).toLocaleDateString()}</small>
             </div>
-            <button className="icon-btn" onClick={() => deleteNote(n.id)} title="Delete note"><Trash2 size={14} /></button>
+            <button className="icon-btn" onClick={() => deleteNote(n.id)} title="Delete note" aria-label="Delete note"><Trash2 size={16} /></button>
           </div>
         ))}
         {!notes.length && (
-          <div style={{ padding: '24px', textAlign: 'center', color: '#889' }}>No notes yet. Add your first note above!</div>
+          <div style={{ padding: '24px', textAlign: 'center', color: '#506155' }}>No notes yet. Add your first note above!</div>
         )}
       </div>
     </div>

@@ -36,7 +36,7 @@ export function GroupExplore() {
 
       <div className="group-hero">
         <div>
-          <span className="pill dark"><Users size={13} /> Vetted small-group expeditions</span>
+          <span className="pill dark"><Users size={14} /> Vetted small-group expeditions</span>
           <h2>Find your next<br /><em>shared story.</em></h2>
           <p>Meet thoughtful travelers, follow trusted local leaders, and go further together.</p>
         </div>
@@ -68,7 +68,7 @@ export function GroupExplore() {
           <button className="group-card detailed-group-card" key={g.id} onClick={() => navigate(`/group-travel/${g.id}`)}>
             <div className="group-card-image">
               <img src={g.destination_image || 'https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=800&q=85'} alt={g.title} />
-              <span className="verified-badge"><Check size={11} /> Verified leader</span>
+              <span className="verified-badge"><Check size={13} /> Verified leader</span>
             </div>
             <div className="group-card-body">
               <div className="organizer">
@@ -79,7 +79,7 @@ export function GroupExplore() {
                 </div>
               </div>
               <h3>{g.title}</h3>
-              <p><MapPin size={13} /> {g.destination_name} · {g.start_date} – {g.end_date}</p>
+              <p><MapPin size={14} /> {g.destination_name} · {g.start_date} – {g.end_date}</p>
               <div className="capacity">
                 <span>Seats filled</span>
                 <strong>{g.member_count || 1} of {g.capacity} filled</strong>
@@ -92,7 +92,7 @@ export function GroupExplore() {
                 </div>
                 <span className="badge badge-green">Open</span>
               </div>
-              <span className="card-link">View dossier & apply <ArrowUpRight size={14} /></span>
+              <span className="card-link">View dossier & apply <ArrowUpRight size={15} /></span>
             </div>
           </button>
         ))}

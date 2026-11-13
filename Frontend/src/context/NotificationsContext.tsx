@@ -38,6 +38,8 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
 
   useEffect(() => {
     refreshNotifications()
+    const interval = setInterval(refreshNotifications, 15000)
+    return () => clearInterval(interval)
   }, [refreshNotifications])
 
   const markAsRead = async (id: string) => {

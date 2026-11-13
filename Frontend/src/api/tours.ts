@@ -14,6 +14,12 @@ export const toursApi = {
       body: JSON.stringify({ travelersCount }),
     }),
 
+  createDeparture: (tourId: string, data: { startDate: string; endDate: string; capacity: number; status?: string }) =>
+    api<TourDeparture>(`/api/tours/${tourId}/departures`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
   getMyBookings: () =>
     api<TourBooking[]>('/api/me/bookings'),
 

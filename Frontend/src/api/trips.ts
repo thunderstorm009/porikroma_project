@@ -31,6 +31,12 @@ export const tripsApi = {
       body: JSON.stringify(item),
     }),
 
+  updateItinerary: (tripId: string, itemId: string, item: { dayDate?: string; title?: string; location?: string; notes?: string }) =>
+    api(`/api/trips/${tripId}/itinerary/${itemId}`, {
+      method: 'PUT',
+      body: JSON.stringify(item),
+    }),
+
   deleteItinerary: (tripId: string, itemId: string) =>
     api(`/api/trips/${tripId}/itinerary/${itemId}`, { method: 'DELETE' }),
 

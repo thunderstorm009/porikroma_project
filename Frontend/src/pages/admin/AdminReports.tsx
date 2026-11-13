@@ -40,15 +40,19 @@ export function AdminReports() {
                 <td>{new Date(r.created_at).toLocaleDateString()}</td>
                 <td>
                   <div style={{ display: 'flex', gap: '6px' }}>
-                    <button className="secondary-btn" style={{ height: '26px', fontSize: '10px' }} onClick={() => takeAction(r.id, 'DISMISSED')}>Dismiss</button>
-                    <button className="outline-btn" style={{ height: '26px', fontSize: '10px' }} onClick={() => takeAction(r.id, 'WARNING')}>Warn</button>
-                    <button className="danger-btn" style={{ height: '26px', fontSize: '10px' }} onClick={() => takeAction(r.id, 'SUSPENDED')}>Suspend</button>
+                    <button className="secondary-btn small" onClick={() => takeAction(r.id, 'DISMISSED')}>Dismiss</button>
+                    <button className="outline-btn small" onClick={() => takeAction(r.id, 'WARNING')}>Warn</button>
+                    <button className="danger-btn small" onClick={() => takeAction(r.id, 'SUSPENDED')}>Suspend</button>
                   </div>
                 </td>
               </tr>
             ))}
             {!reports.length && (
-              <tr><td colSpan={5} style={{ padding: '24px', textAlign: 'center', color: '#889' }}>No reports in the moderation queue.</td></tr>
+              <tr>
+                <td colSpan={5} style={{ padding: '32px 16px', textAlign: 'center', color: '#5a685e', fontSize: '14px' }}>
+                  No reports in the moderation queue.
+                </td>
+              </tr>
             )}
           </tbody>
         </table>

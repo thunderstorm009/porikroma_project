@@ -143,11 +143,11 @@ export function ExpensesTab({ tripId, trip, expenses, members, onRefresh }: Expe
         </div>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '20px 0 10px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '24px 0 12px' }}>
         <h2>Expense ledger</h2>
         <div style={{ display: 'flex', gap: '8px' }}>
-          <button className="secondary-btn" onClick={() => setShowSettlementModal(true)}><Users size={15} /> Settle balances</button>
-          <button className="primary-btn" onClick={() => setShowModal(true)}><Plus size={15} /> Add expense</button>
+          <button className="secondary-btn" onClick={() => setShowSettlementModal(true)}><Users size={17} /> Settle balances</button>
+          <button className="primary-btn" onClick={() => setShowModal(true)}><Plus size={17} /> Add expense</button>
         </div>
       </div>
 
@@ -172,13 +172,13 @@ export function ExpensesTab({ tripId, trip, expenses, members, onRefresh }: Expe
                 <td>{exp.expense_date}</td>
                 <td><strong>৳ {Number(exp.amount).toLocaleString()}</strong></td>
                 <td>
-                  <button className="icon-btn" onClick={() => deleteExpense(exp.id)} title="Delete expense"><Trash2 size={14} /></button>
+                  <button className="icon-btn" onClick={() => deleteExpense(exp.id)} title="Delete expense" aria-label="Delete expense"><Trash2 size={16} /></button>
                 </td>
               </tr>
             ))}
             {!expenses.length && (
               <tr>
-                <td colSpan={6} style={{ textAlign: 'center', padding: '24px', color: '#889' }}>No expenses recorded yet.</td>
+                <td colSpan={6} style={{ textAlign: 'center', padding: '24px', color: '#506155' }}>No expenses recorded yet.</td>
               </tr>
             )}
           </tbody>
@@ -195,32 +195,32 @@ export function ExpensesTab({ tripId, trip, expenses, members, onRefresh }: Expe
             </p>
           </div>
           <button className="secondary-btn" onClick={() => setShowSettlementModal(true)}>
-            <Users size={15} /> Record payment
+            <Users size={17} /> Record payment
           </button>
         </div>
 
         {/* Trip-level summary of settled vs outstanding in BDT */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '14px', marginBottom: '16px' }}>
           <div style={{ background: '#f8fafc', padding: '14px 18px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-            <span style={{ fontSize: '11px', textTransform: 'uppercase', color: '#64748b', fontWeight: 600, letterSpacing: '0.4px' }}>
+            <span style={{ fontSize: '12px', textTransform: 'uppercase', color: '#64748b', fontWeight: 600, letterSpacing: '0.4px' }}>
               Settled (Confirmed)
             </span>
             <strong style={{ display: 'block', fontSize: '22px', color: '#059669', margin: '4px 0' }}>
               ৳ {settledTotal.toLocaleString()}
             </strong>
-            <small style={{ color: '#059669', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <CheckCircle2 size={12} /> Confirmed by creditor
+            <small style={{ color: '#059669', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <CheckCircle2 size={14} /> Confirmed by creditor
             </small>
           </div>
 
           <div style={{ background: '#f8fafc', padding: '14px 18px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-            <span style={{ fontSize: '11px', textTransform: 'uppercase', color: '#64748b', fontWeight: 600, letterSpacing: '0.4px' }}>
+            <span style={{ fontSize: '12px', textTransform: 'uppercase', color: '#64748b', fontWeight: 600, letterSpacing: '0.4px' }}>
               Outstanding Balance
             </span>
             <strong style={{ display: 'block', fontSize: '22px', color: outstandingTotal > 0 ? '#d97706' : '#64748b', margin: '4px 0' }}>
               ৳ {outstandingTotal.toLocaleString()}
             </strong>
-            <small style={{ color: outstandingTotal > 0 ? '#d97706' : '#64748b', fontSize: '11px' }}>
+            <small style={{ color: outstandingTotal > 0 ? '#d97706' : '#64748b', fontSize: '12px' }}>
               {paidAwaitingConfirmTotal > 0
                 ? `৳ ${paidAwaitingConfirmTotal.toLocaleString()} awaiting confirmation`
                 : pendingTotal > 0
@@ -230,20 +230,20 @@ export function ExpensesTab({ tripId, trip, expenses, members, onRefresh }: Expe
           </div>
 
           <div style={{ background: '#f8fafc', padding: '14px 18px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-            <span style={{ fontSize: '11px', textTransform: 'uppercase', color: '#64748b', fontWeight: 600, letterSpacing: '0.4px' }}>
+            <span style={{ fontSize: '12px', textTransform: 'uppercase', color: '#64748b', fontWeight: 600, letterSpacing: '0.4px' }}>
               Total Settlements
             </span>
             <strong style={{ display: 'block', fontSize: '22px', color: '#1e293b', margin: '4px 0' }}>
               ৳ {(settledTotal + outstandingTotal).toLocaleString()}
             </strong>
-            <small style={{ color: '#64748b', fontSize: '11px' }}>
+            <small style={{ color: '#64748b', fontSize: '12px' }}>
               {settlements.length} {settlements.length === 1 ? 'settlement recorded' : 'settlements recorded'}
             </small>
           </div>
         </div>
 
         {settlementError && (
-          <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '10px 14px', borderRadius: '6px', fontSize: '12px', marginBottom: '14px' }}>
+          <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '10px 14px', borderRadius: '6px', fontSize: '13.5px', marginBottom: '16px' }}>
             {settlementError}
           </div>
         )}
@@ -269,11 +269,11 @@ export function ExpensesTab({ tripId, trip, expenses, members, onRefresh }: Expe
                   <tr key={s.id}>
                     <td>
                       <strong>{s.from_user_name}</strong>
-                      {isDebtor && <span className="badge badge-blue sm" style={{ marginLeft: '6px', fontSize: '10px' }}>You (Debtor)</span>}
+                      {isDebtor && <span className="badge badge-blue sm" style={{ marginLeft: '6px', fontSize: '12px' }}>You (Debtor)</span>}
                     </td>
                     <td>
                       <strong>{s.to_user_name}</strong>
-                      {isCreditor && <span className="badge badge-green sm" style={{ marginLeft: '6px', fontSize: '10px' }}>You (Creditor)</span>}
+                      {isCreditor && <span className="badge badge-green sm" style={{ marginLeft: '6px', fontSize: '12px' }}>You (Creditor)</span>}
                     </td>
                     <td>
                       <strong>৳ {Number(s.amount).toLocaleString()}</strong>
@@ -309,7 +309,7 @@ export function ExpensesTab({ tripId, trip, expenses, members, onRefresh }: Expe
                       {statusUpper === 'PENDING' && isDebtor && (
                         <button
                           className="primary-btn sm"
-                          style={{ height: '30px', padding: '0 12px', fontSize: '11px', whiteSpace: 'nowrap' }}
+                          style={{ height: '34px', padding: '0 14px', fontSize: '13px', whiteSpace: 'nowrap' }}
                           onClick={() => handleMarkPaid(s.id)}
                           disabled={updatingId === s.id}
                         >
@@ -320,7 +320,7 @@ export function ExpensesTab({ tripId, trip, expenses, members, onRefresh }: Expe
                       {statusUpper === 'PAID' && isCreditor && (
                         <button
                           className="primary-btn sm"
-                          style={{ height: '30px', padding: '0 12px', fontSize: '11px', background: '#059669', borderColor: '#059669', whiteSpace: 'nowrap' }}
+                          style={{ height: '34px', padding: '0 14px', fontSize: '13px', background: '#059669', borderColor: '#059669', whiteSpace: 'nowrap' }}
                           onClick={() => handleConfirmReceived(s.id)}
                           disabled={updatingId === s.id}
                         >
@@ -329,25 +329,25 @@ export function ExpensesTab({ tripId, trip, expenses, members, onRefresh }: Expe
                       )}
 
                       {statusUpper === 'PENDING' && !isDebtor && (
-                        <small style={{ color: '#d97706', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <Clock size={12} /> Awaiting payment
+                        <small style={{ color: '#d97706', fontSize: '12.5px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <Clock size={14} /> Awaiting payment
                         </small>
                       )}
 
                       {statusUpper === 'PAID' && !isCreditor && (
-                        <small style={{ color: '#2563eb', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <Clock size={12} /> Awaiting confirmation
+                        <small style={{ color: '#2563eb', fontSize: '12.5px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <Clock size={14} /> Awaiting confirmation
                         </small>
                       )}
 
                       {statusUpper === 'CONFIRMED' && (
-                        <span style={{ color: '#059669', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 500 }}>
-                          <Check size={13} /> Settled
+                        <span style={{ color: '#059669', fontSize: '12.5px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 500 }}>
+                          <Check size={14} /> Settled
                         </span>
                       )}
 
                       {statusUpper === 'CANCELLED' && (
-                        <small style={{ color: '#94a3b8', fontSize: '11px' }}>Cancelled</small>
+                        <span className="badge badge-gray" style={{ fontSize: '12px' }}>Cancelled</span>
                       )}
                     </td>
                   </tr>
@@ -355,7 +355,7 @@ export function ExpensesTab({ tripId, trip, expenses, members, onRefresh }: Expe
               })}
               {!settlements.length && (
                 <tr>
-                  <td colSpan={5} style={{ textAlign: 'center', padding: '24px', color: '#889' }}>
+                  <td colSpan={5} style={{ textAlign: 'center', padding: '24px', color: '#506155' }}>
                     No settlements recorded yet. Click "Record payment" to log a balance settlement.
                   </td>
                 </tr>
@@ -368,7 +368,7 @@ export function ExpensesTab({ tripId, trip, expenses, members, onRefresh }: Expe
       {showModal && (
         <div className="modal-backdrop" onClick={() => setShowModal(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setShowModal(false)}><X size={18} /></button>
+            <button className="modal-close" onClick={() => setShowModal(false)} aria-label="Close add expense modal"><X size={18} /></button>
             <h2>Add an expense</h2>
             <label>Description<input autoFocus placeholder="e.g. Dinner at Salt & Pepper" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></label>
             <label>Category
@@ -393,7 +393,7 @@ export function ExpensesTab({ tripId, trip, expenses, members, onRefresh }: Expe
       {showSettlementModal && (
         <div className="modal-backdrop" onClick={() => setShowSettlementModal(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setShowSettlementModal(false)}><X size={18} /></button>
+            <button className="modal-close" onClick={() => setShowSettlementModal(false)} aria-label="Close settlement modal"><X size={18} /></button>
             <h2>Record a settlement</h2>
             <label>Pay to traveler
               <select value={settlementForm.toUserId} onChange={(e) => setSettlementForm({ ...settlementForm, toUserId: e.target.value })}>

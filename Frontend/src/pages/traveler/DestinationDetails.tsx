@@ -40,7 +40,7 @@ export function DestinationDetails() {
 
   return (
     <div className="page">
-      <button className="back-link" onClick={() => navigate('/destinations')}><ChevronRight size={14} className="back-arrow" /> Back to destinations</button>
+      <button className="back-link" onClick={() => navigate('/destinations')}><ChevronRight size={16} className="back-arrow" /> Back to destinations</button>
       <div className="destination-detail-hero">
         <img src={dest.image || 'https://images.unsplash.com/photo-1528127269322-539801943592?w=1400&q=85'} alt={dest.name} />
         <div>
@@ -88,7 +88,7 @@ export function DestinationDetails() {
                 </div>
               ))}
               {!dest.reviews?.length && (
-                <p style={{ color: '#889', fontSize: '12px' }}>Be the first traveler to review this place!</p>
+                <p style={{ color: '#506155', fontSize: '13px' }}>Be the first traveler to review this place!</p>
               )}
             </div>
 
@@ -96,7 +96,7 @@ export function DestinationDetails() {
               <h3>Add your review</h3>
               <div style={{ display: 'flex', gap: '8px', margin: '8px 0' }}>
                 {[1, 2, 3, 4, 5].map((star) => (
-                  <button key={star} type="button" onClick={() => setReviewRating(star)} style={{ fontSize: '18px', color: star <= reviewRating ? '#f5a623' : '#ccc' }}>
+                  <button key={star} type="button" onClick={() => setReviewRating(star)} style={{ fontSize: '18px', color: star <= reviewRating ? '#f5a623' : '#8b9e90' }}>
                     ★
                   </button>
                 ))}
@@ -104,7 +104,7 @@ export function DestinationDetails() {
               <textarea
                 placeholder="Share advice, favorite food spots, or seasonal tips..."
                 rows={3}
-                style={{ width: '100%', borderRadius: '6px', border: '1px solid var(--line)', padding: '8px', fontSize: '12px' }}
+                style={{ width: '100%', borderRadius: '8px', border: '1px solid var(--line-strong)', padding: '12px 14px', fontSize: '16px', boxSizing: 'border-box' }}
                 value={reviewBody}
                 onChange={(e) => setReviewBody(e.target.value)}
               />
@@ -122,11 +122,11 @@ export function DestinationDetails() {
           <div className="panel destination-action-panel" style={{ marginTop: '16px' }}>
             <h2>Make it yours</h2>
             <p>Add this destination to an upcoming trip or plan a new one.</p>
-            <button className="primary-btn" onClick={() => navigate('/trips/create')}>
-              <Plus size={16} /> Plan a trip here
+            <button className="primary-btn" onClick={() => navigate(`/trips/create?destinationId=${dest.id}&name=${encodeURIComponent(`${dest.name} Discovery`)}`)}>
+              <Plus size={18} /> Plan a trip here
             </button>
             <button className="outline-btn" onClick={() => navigate('/ai-assistant')}>
-              <Bot size={16} /> Plan with AI
+              <Bot size={18} /> Plan with AI
             </button>
           </div>
         </aside>

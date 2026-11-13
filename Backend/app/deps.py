@@ -64,9 +64,16 @@ async def get_current_user(
 
     user = await db.fetchrow(
         """
-        SELECT id, name, email, role, status, avatar, is_verified, created_at, updated_at
-        FROM users
-        WHERE id = $1
+        SELECT u.id, u.name, u.email, u.role, u.status, u.created_at,
+               coalesce(up.avatar_url, '') AS avatar_url,
+               coalesce(up.avatar_url, '') AS avatar,
+               EXISTS (
+                   SELECT 1 FROM verification_requests vr
+                   WHERE vr.user_id = u.id AND vr.status = 'APPROVED'
+               ) AS is_verified
+        FROM users u
+        LEFT JOIN user_profiles up ON up.user_id = u.id
+        WHERE u.id = $1
         """,
         user_uuid,
     )

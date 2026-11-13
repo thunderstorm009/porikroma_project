@@ -87,7 +87,7 @@ export function AuthPage({ mode }: AuthPageProps) {
       <main className="auth-page">
         <div className="auth-card">
           <div className="brand auth-brand"><span className="brand-mark">p</span><span>porikroma</span></div>
-          <div className="modal-icon"><Check size={20} /></div>
+          <div className="modal-icon"><Check size={22} /></div>
           <h1>Password reset complete</h1>
           <p>Your password has been securely updated. You can now log in.</p>
           <button className="primary-btn auth-submit" onClick={() => navigate('/login')}>Proceed to login <ArrowUpRight size={16} /></button>
@@ -101,13 +101,13 @@ export function AuthPage({ mode }: AuthPageProps) {
       <main className="auth-page">
         <div className="auth-card">
           <div className="brand auth-brand"><span className="brand-mark">p</span><span>porikroma</span></div>
-          <div className="modal-icon"><Check size={20} /></div>
+          <div className="modal-icon"><Check size={22} /></div>
           <h1>Reset token ready</h1>
           <p>A password reset token was generated for your email.</p>
           {resetInfo?.resetToken && (
-            <div style={{ background: '#f3f6f1', padding: '12px', borderRadius: '8px', margin: '14px 0', fontSize: '11px', wordBreak: 'break-all' }}>
+            <div style={{ background: '#f3f6f1', padding: '12px', borderRadius: '8px', margin: '14px 0', fontSize: '13px', wordBreak: 'break-all' }}>
               <strong>Reset Token:</strong>
-              <p style={{ marginTop: '4px', color: '#556b5b' }}>{resetInfo.resetToken}</p>
+              <p style={{ marginTop: '4px', color: '#334f3b' }}>{resetInfo.resetToken}</p>
             </div>
           )}
           {resetInfo?.resetLink && (
@@ -131,13 +131,13 @@ export function AuthPage({ mode }: AuthPageProps) {
 
         {mode === 'login' && (
           <div style={{ background: '#f0f4ee', border: '1px solid #d5dfd1', padding: '12px', borderRadius: '9px', marginBottom: '18px' }}>
-            <span style={{ fontSize: '11px', fontWeight: 600, color: '#3c5244', display: 'block', marginBottom: '8px' }}>
+            <span style={{ fontSize: '12px', fontWeight: 600, color: '#2d4234', display: 'block', marginBottom: '8px' }}>
               Quick One-Click Test Accounts:
             </span>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
-              <button type="button" className="outline-btn small" onClick={() => quickLogin('TRAVELER')} style={{ justifyContent: 'center', fontSize: '11px' }}>Traveler</button>
-              <button type="button" className="outline-btn small" onClick={() => quickLogin('TOUR_PLANNER')} style={{ justifyContent: 'center', fontSize: '11px' }}>Tour Planner</button>
-              <button type="button" className="outline-btn small" onClick={() => quickLogin('ADMIN')} style={{ justifyContent: 'center', fontSize: '11px' }}>Admin</button>
+              <button type="button" className="outline-btn small" onClick={() => quickLogin('TRAVELER')} style={{ justifyContent: 'center' }}>Traveler</button>
+              <button type="button" className="outline-btn small" onClick={() => quickLogin('TOUR_PLANNER')} style={{ justifyContent: 'center' }}>Tour Planner</button>
+              <button type="button" className="outline-btn small" onClick={() => quickLogin('ADMIN')} style={{ justifyContent: 'center' }}>Admin</button>
             </div>
           </div>
         )}

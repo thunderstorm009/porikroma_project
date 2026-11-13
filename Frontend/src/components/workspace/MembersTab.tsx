@@ -44,7 +44,7 @@ export function MembersTab({ tripId, members, onRefresh }: MembersTabProps) {
 
       <div className="inline-add" style={{ margin: '14px 0' }}>
         <input type="email" placeholder="Enter traveler's email to invite..." value={email} onChange={(e) => setEmail(e.target.value)} />
-        <button className="primary-btn" onClick={invite}><Plus size={15} /> Add member</button>
+        <button className="primary-btn" onClick={invite}><Plus size={17} /> Add member</button>
       </div>
       {error && <p className="error-text">{error}</p>}
 
@@ -55,11 +55,11 @@ export function MembersTab({ tripId, members, onRefresh }: MembersTabProps) {
               <div className="avatar">{m.name[0]}</div>
               <div>
                 <strong>{m.name}</strong>
-                <small style={{ display: 'block', color: '#889' }}>{m.email} · <span className="badge badge-green">{m.role}</span></small>
+                <small style={{ display: 'block', color: '#506155' }}>{m.email} · <span className="badge badge-green">{m.role}</span></small>
               </div>
             </div>
             {m.role !== 'OWNER' && (
-              <button className="icon-btn" onClick={() => remove(m.id)} title="Remove member"><Trash2 size={14} /></button>
+              <button className="icon-btn" onClick={() => remove(m.id)} title="Remove member" aria-label="Remove member"><Trash2 size={16} /></button>
             )}
           </div>
         ))}

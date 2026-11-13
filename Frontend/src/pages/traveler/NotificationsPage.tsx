@@ -34,13 +34,13 @@ export function NotificationsPage() {
             className={item.read ? 'notification-row' : 'notification-row unread'}
             key={item.id}
             onClick={() => markRead(item.id, item.link)}>
-            <span className="notification-icon"><Bell size={16} /></span>
+            <span className="notification-icon"><Bell size={18} /></span>
             <div>
               <strong>{item.type}</strong>
               <small>{item.detail}</small>
             </div>
             {!item.read && <i />}
-            <span className="icon-btn" onClick={(e) => deleteNotif(item.id, e)} title="Delete notification"><Trash2 size={14} /></span>
+            <span className="icon-btn" onClick={(e) => deleteNotif(item.id, e)} title="Delete notification" aria-label="Delete notification" role="button" tabIndex={0}><Trash2 size={16} /></span>
           </button>
         ))}
         {!items.length && (
