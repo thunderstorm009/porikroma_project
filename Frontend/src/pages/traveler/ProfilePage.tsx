@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { Check, Star, Lock } from 'lucide-react'
-import { api, getUserPeerReviews } from '../../api'
+import { api, getUserPeerReviews, createPeerReview } from '../../api'
 import type { PeerReviewsResponse } from '../../types'
 import { PageHeader } from '../../components/common/PageHeader'
 
@@ -18,6 +18,7 @@ export function ProfilePage() {
     rating: number
     trips_count: number
     is_private?: boolean
+    admin_warnings?: { id: string; note?: string; created_at: string }[]
   } | null>(null)
   const [reviewsData, setReviewsData] = useState<PeerReviewsResponse | null>(null)
   const [loadingReviews, setLoadingReviews] = useState(true)
@@ -28,6 +29,12 @@ export function ProfilePage() {
   const [interests, setInterests] = useState<string[]>([])
   const [message, setMessage] = useState('')
   const [saving, setSaving] = useState(false)
+  const [reviewableTrips, setReviewableTrips] = useState<{ id: string; name: string }[]>([])
+  const [reviewTripId, setReviewTripId] = useState('')
+  const [reviewRating, setReviewRating] = useState(5)
+  const [reviewComment, setReviewComment] = useState('')
+  const [reviewMessage, setReviewMessage] = useState('')
+  const [submittingReview, setSubmittingReview] = useState(false)
 
   const isSelf = !userId
 
@@ -48,6 +55,13 @@ export function ProfilePage() {
       .then(setReviewsData)
       .catch(() => {})
       .finally(() => setLoadingReviews(false))
+    if (userId) {
+      api<{ id: string; name: string }[]>(`/api/users/${userId}/reviewable-trips`)
+        .then((trips) => { setReviewableTrips(trips); setReviewTripId(trips[0]?.id || '') })
+        .catch(() => setReviewableTrips([]))
+    } else {
+      setReviewableTrips([])
+    }
   }, [userId, isSelf])
 
   const save = async () => {
@@ -74,7 +88,37 @@ export function ProfilePage() {
     setInterests(interests.filter((t) => t !== tag))
   }
 
-  if (!profile) return <div className="page"><p className="muted">Loading profile…</p></div>
+  const submitProfileReview = async () => {
+    if (!profile || !reviewTripId) return
+    setSubmittingReview(true)
+    setReviewMessage('')
+    try {
+      await createPeerReview({ tripId: reviewTripId, revieweeId: profile.id, rating: reviewRating, comment: reviewComment })
+      setReviewableTrips((trips) => trips.filter((trip) => trip.id !== reviewTripId))
+      setReviewComment('')
+      setReviewMessage('Your review has been submitted.')
+      getUserPeerReviews(userId).then(setReviewsData).catch(() => undefined)
+    } catch (error) {
+      setReviewMessage(error instanceof Error ? error.message : 'Could not submit your review.')
+    } finally {
+      setSubmittingReview(false)
+    }
+  }
+
+  if (!profile) {
+    return (
+      <div className="page">
+        {message ? (
+          <div className="empty-card" style={{ maxWidth: '600px', margin: '40px auto', textAlign: 'center' }}>
+            <p style={{ color: 'var(--red, #b91c1c)', fontWeight: 600, marginBottom: '12px' }}>{message}</p>
+            <button className="primary-btn" onClick={() => window.location.reload()}>Retry</button>
+          </div>
+        ) : (
+          <p className="muted">Loading profile…</p>
+        )}
+      </div>
+    )
+  }
 
   return (
     <div className="page">
@@ -159,7 +203,43 @@ export function ProfilePage() {
         )}
       </section>
 
+      {isSelf && (profile.admin_warnings?.length ?? 0) > 0 && (
+        <section className="panel" style={{ maxWidth: '780px', marginTop: '20px', border: '1px solid #f3c76b', background: '#fffbeb' }}>
+          <h3 style={{ marginTop: 0, color: '#92400e' }}>Admin notices</h3>
+          {profile.admin_warnings?.map((warning) => (
+            <div key={warning.id} style={{ padding: '10px 0', borderTop: '1px solid #f3dfb0' }}>
+              <strong>Warning issued {new Date(warning.created_at).toLocaleDateString()}</strong>
+              {warning.note && <p style={{ margin: '6px 0 0' }}>{warning.note}</p>}
+            </div>
+          ))}
+        </section>
+      )}
+
       {/* Traveler Reviews Section */}
+      {!isSelf && !profile.is_private && reviewableTrips.length > 0 && (
+        <section className="panel" style={{ maxWidth: '780px', marginTop: '24px' }}>
+          <h3 style={{ marginTop: 0 }}>Rate and review {profile.name}</h3>
+          <p className="muted">Reviews are available for travelers you shared a completed trip with.</p>
+          <label>Completed trip
+            <select value={reviewTripId} onChange={(event) => setReviewTripId(event.target.value)}>
+              {reviewableTrips.map((trip) => <option key={trip.id} value={trip.id}>{trip.name}</option>)}
+            </select>
+          </label>
+          <label style={{ marginTop: '12px' }}>Rating
+            <select value={reviewRating} onChange={(event) => setReviewRating(Number(event.target.value))}>
+              {[5, 4, 3, 2, 1].map((value) => <option key={value} value={value}>{value} / 5 stars</option>)}
+            </select>
+          </label>
+          <label style={{ marginTop: '12px' }}>Review
+            <textarea rows={3} maxLength={2000} value={reviewComment} onChange={(event) => setReviewComment(event.target.value)} placeholder="Share what it was like traveling together…" />
+          </label>
+          {reviewMessage && <p className="muted">{reviewMessage}</p>}
+          <button className="primary-btn" style={{ marginTop: '12px' }} disabled={!reviewTripId || submittingReview} onClick={submitProfileReview}>
+            {submittingReview ? 'Submitting…' : 'Submit review'} <Star size={16} />
+          </button>
+        </section>
+      )}
+
       <section className="panel" style={{ maxWidth: '780px', marginTop: '24px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <div>

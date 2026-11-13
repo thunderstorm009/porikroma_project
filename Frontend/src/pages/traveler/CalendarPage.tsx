@@ -17,10 +17,16 @@ export function CalendarPage() {
     api<Trip[]>('/api/trips').then((trips) => {
       const tripEvents: Record<string, string[]> = {}
       trips.forEach((t) => {
-        const start = new Date(t.start_date)
-        if (!isNaN(start.getTime())) {
-          const key = `${start.getFullYear()}-${start.getMonth()}-${start.getDate()}`
-          tripEvents[key] = [...(tripEvents[key] || []), `${t.name} (${t.status})`]
+        // Use date-only parsing to avoid timezone shifts, and mark every day
+        // of the trip so joined expeditions are visible throughout their dates.
+        const start = new Date(`${t.start_date.slice(0, 10)}T12:00:00`)
+        const end = new Date(`${(t.end_date || t.start_date).slice(0, 10)}T12:00:00`)
+        if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+          for (const day = new Date(start); day <= end; day.setDate(day.getDate() + 1)) {
+            const key = `${day.getFullYear()}-${day.getMonth()}-${day.getDate()}`
+            const event = `${t.name} (${t.status})`
+            tripEvents[key] = [...(tripEvents[key] || []), event]
+          }
         }
       })
       setEvents((prev) => ({ ...prev, ...tripEvents }))

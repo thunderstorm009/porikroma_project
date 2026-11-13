@@ -1,158 +1,219 @@
 # Porikroma
 
-Porikroma is an intelligent travel planning platform and community ecosystem built specifically for discovering Bangladesh. The platform enables travelers, licensed tour operators, and platform moderators to explore 64-district destinations, organize collaborative group expeditions, split expenses in BDT, maintain a travel passport booklet, reserve commercial tours, engage in community discussions, and interact with an AI travel planning assistant.
+Porikroma is a travel planning and community platform focused on Bangladesh. Travelers can plan solo and group trips, join shared expeditions, manage trip costs, record places they have visited, and review travel companions. Tour planners can publish trips and manage bookings. Administrators can verify planners and moderate reports.
 
----
+## Contents
 
-## 1. Architecture & Tech Stack
+- [Features](#features)
+- [Technology](#technology)
+- [Run with Docker Compose](#run-with-docker-compose)
+- [Run locally](#run-locally)
+- [Environment configuration](#environment-configuration)
+- [Demo accounts and sample data](#demo-accounts-and-sample-data)
+- [Main workflows](#main-workflows)
+- [Database schema and migrations](#database-schema-and-migrations)
+- [Tests and production build](#tests-and-production-build)
+- [API documentation](#api-documentation)
+- [Project layout](#project-layout)
 
-- **Frontend**: React 19, TypeScript, Vite, Tailwind CSS, Lucide icons, React Router 7.
-- **Backend**: Python 3.12+ / 3.14, FastAPI, asyncpg (connection pool), Pydantic v2, PyJWT, bcrypt.
-- **Database**: PostgreSQL 16+.
-- **Testing**: pytest, pytest-anyio, httpx, starlette TestClient (119 automated tests including contract & multi-user workflow suites).
+## Features
 
----
+### Travelers
 
-## 2. Quick Start with Docker Compose (Recommended)
+- Register, log in, manage a profile, and set privacy preferences.
+- Create solo trips or publish group expeditions, browse trips, request to join, and manage applications.
+- Use a trip workspace for itinerary, checklist, shared notes, journal, photos, map places, group chat, members, expenses, and settlements.
+- Review eligible companions after completing a shared trip. Profiles show ratings and written reviews.
+- Browse destinations, submit destination reviews, join community discussions, and use the AI travel planner.
+- Track trip dates in the calendar. Trips you create and approved group trips you join appear on each date of the trip.
+- Track visited destinations and districts in the travel footprint. Add historical passport stamps with the date visited, including travel from before joining Porikroma. Completing a trip adds its destination to participants' passports.
+- Record trip expenses and settlements, and set a yearly travel budget cap in Expense management.
 
-The repository provides a complete local development stack configured in `docker-compose.yml`.
+### Tour planners
 
-### Start the Stack
+- Create and manage commercial tour packages and scheduled departures.
+- Review traveler bookings and confirm or cancel reservations.
+- Submit planner verification requests for administrator review.
+
+### Administrators
+
+- View platform analytics and manage users, destinations, trips, groups, planner verifications, and moderation reports.
+- Issue warnings or suspend/ban accounts. Warnings are visible to the affected user under **Admin notices** on their profile.
+- Moderate community posts and comments.
+
+## Technology
+
+- Frontend: React 19, TypeScript, Vite, React Router, Leaflet.
+- Backend: Python, FastAPI, Pydantic, asyncpg, PyJWT, bcrypt.
+- Database: PostgreSQL 16 or later.
+- Automated checks: pytest, HTTPX, and FastAPI TestClient.
+
+## Run with Docker Compose
+
+Requirements: Docker Engine and Docker Compose plugin.
+
+From the repository root:
 
 ```bash
 docker compose up --build
 ```
 
-This single command brings up:
-1. **PostgreSQL 16**: Port `5432`, initialized with [`Backend/schema.sql`](./Backend/schema.sql) and persistent data volume `pgdata`.
-2. **FastAPI Backend**: Port `4000`, runs database migrations, executes [`Backend/seed.py`](./Backend/seed.py), and starts with hot-reloading.
-3. **Vite Frontend**: Port `5173`, served with live module replacement against `http://localhost:4000`.
+Compose starts PostgreSQL, the FastAPI API, and the Vite development server. The backend applies `Backend/schema.sql`, runs all ordered SQL migrations, seeds demo data, and starts the API after PostgreSQL is healthy.
 
-### Service URLs
+- Frontend: <http://localhost:5173>
+- API: <http://localhost:4000>
+- Health: <http://localhost:4000/api/health>
+- OpenAPI docs: <http://localhost:4000/docs>
 
-- **Frontend UI**: [http://localhost:5173](http://localhost:5173)
-- **Backend API**: [http://localhost:4000](http://localhost:4000)
-- **API Health Check**: [http://localhost:4000/api/health](http://localhost:4000/api/health)
-- **Interactive OpenAPI Docs**: [http://localhost:4000/docs](http://localhost:4000/docs)
+Stop the services with `Ctrl+C`. To stop and remove the database volume too, use `docker compose down -v`; this deletes local database data.
 
----
+## Run locally
 
-## 3. Local Native Setup (Without Docker)
+Requirements: Python 3.12+, Node.js 20+, npm, and PostgreSQL 16+.
 
-### Prerequisites
-
-- Python 3.10+
-- Node.js 20+
-- PostgreSQL 16+ running locally
-
-### Step 1: Initialize PostgreSQL Database
+Create a PostgreSQL database and configure the backend:
 
 ```bash
 createdb porikroma
-```
-
-### Step 2: Configure & Start Backend
-
-```bash
 cd Backend
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-
-# Copy example environment configuration
 cp .env.example .env
+```
 
-# Run database schema initialization and initial seed data
+Initialize the database and start the API:
+
+```bash
 python seed.py
-
-# Launch FastAPI development server
 uvicorn app.main:app --host 0.0.0.0 --port 4000 --reload
 ```
 
-### Step 3: Configure & Start Frontend
-
-In a separate terminal window:
+The API applies the base schema and migrations on startup. In a second terminal:
 
 ```bash
 cd Frontend
-npm install
-npm run dev
+npm ci
+npm run dev -- --host 0.0.0.0
 ```
 
-Visit [http://localhost:5173](http://localhost:5173) in your browser.
+Open <http://localhost:5173>. Set `VITE_API_URL` if the API is not at `http://localhost:4000`.
 
----
+## Environment configuration
 
-## 4. Environment Variables
+Backend settings are loaded from `Backend/.env` and can also be set as environment variables.
 
-The backend loads settings from `Backend/.env` (or Docker environment variables):
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `DATABASE_URL` | `postgres://postgres@localhost:5432/porikroma` | PostgreSQL connection string. |
+| `JWT_SECRET` | Development placeholder | Signing secret for access and recovery tokens. Set a strong, private value outside local development. |
+| `PORT` | `4000` | API port. |
+| `CORS_ORIGINS` | `*` | Comma-separated allowed origins, or `*` for local development. Restrict this in deployments. |
+| `FRONTEND_URL` | `http://localhost:5173` | Base URL for email verification and password recovery links. |
+| `GEMINI_API_KEY` | Empty | Optional Gemini key for AI-generated planner responses. |
+| `GEMINI_MODEL` | `gemini-2.5-flash` | Gemini model identifier. |
+| `OPENWEATHER_API_KEY` | Empty | Optional OpenWeatherMap key. Weather routes provide fallback behavior when unavailable. |
+| `EMAIL_PROVIDER` | `resend` | Email provider: `resend`, `postmark`, or `console`. |
+| `EMAIL_API_KEY` | Empty | Provider key. With no key, email dispatch falls back to the application console. |
+| `EMAIL_FROM` | `Porikroma <notifications@porikroma.com>` | Transactional email sender. |
+| `VITE_API_URL` | `http://localhost:4000` | Frontend API base URL. |
 
-| Variable | Default Value | Description |
-|---|---|---|
-| `DATABASE_URL` | `postgres://postgres@localhost:5432/porikroma` | PostgreSQL connection URL (asyncpg format) |
-| `TEST_DATABASE_URL` | *None* (optional) | Dedicated test database URL for workflow integration tests |
-| `JWT_SECRET` | `replace-with-a-long-random-secret-for-jwt-signing` | Secret key used for HS256 JWT access and reset tokens |
-| `PORT` | `4000` | Port on which the FastAPI application listens |
-| `CORS_ORIGINS` | `*` | Allowed CORS origins (comma-separated origins or `*`) |
-| `VITE_API_URL` | `http://localhost:4000` | Frontend configuration for target API server |
+Do not use the development JWT secret, wildcard CORS, demo passwords, or sample credentials in a public deployment.
 
----
+## Demo accounts and sample data
 
-## 5. Seed Data & Default Demo Accounts
+Run `python Backend/seed.py` (or start Compose) to insert repeatable sample data. All demo accounts use password `password123`:
 
-The database seed script [`Backend/seed.py`](./Backend/seed.py) creates initial destination catalogs across Bangladesh divisions, sample trips, expeditions, tour packages, departures, and demo accounts with password `password123`:
+| Role | Email | Sample use |
+| --- | --- | --- |
+| Traveler | `traveler@porikroma.com` | Trips, workspace, expenses, footprint, and profile. |
+| Traveler | `traveler2@porikroma.com` | Group applications and companion profile reviews. |
+| Tour planner | `planner@porikroma.com` | Tours, departures, bookings, verification. |
+| Administrator | `admin@porikroma.com` | User, planner, and moderation administration. |
 
-| Role | Email | Password | Pre-loaded Context |
-|---|---|---|---|
-| **Traveler** | `traveler@porikroma.com` | `password123` | Trips, workspace notes, checklists, footprint stamps |
-| **Traveler 2** | `traveler2@porikroma.com` | `password123` | Applications, comments, peer traveler profile |
-| **Tour Planner** | `planner@porikroma.com` | `password123` | Published tour packages, departures schedule, bookings |
-| **Platform Admin**| `admin@porikroma.com` | `password123` | Analytics dashboard, verifications queue, moderation |
+The seed includes a completed trip shared by both traveler accounts and a 5-star written peer review from the second traveler to the first. Log in as the first traveler, then open the second traveler's profile to see the eligible **Rate and review** form. Seed operations are designed to be repeatable and avoid duplicate sample records.
 
-### To Re-run or Reset Seed Data
+## Main workflows
+
+### Plan or join a trip
+
+1. Sign in as a traveler and choose **New trip**.
+2. Select solo travel or group expedition, choose a destination and dates, then create the trip.
+3. Group expeditions appear in **Group travel → Explore**. Travelers submit join requests; the organizer reviews them in requests.
+4. The trip creator and approved group members can open the trip workspace. Its tabs hold the shared itinerary, checklist, expenses, notes, memories, map places, chat, and membership tools.
+5. Created trips and approved joined expeditions appear in the calendar for every date between trip start and end.
+
+### Track spending
+
+- Add expenses from a trip workspace. Expense entries are associated with that trip and feed its budget totals and the cross-trip ledger.
+- Record, pay, or confirm settlements in the trip workspace to track who owes whom.
+- Open **Expense management** to see recorded spending and set an annual cap in BDT.
+
+### Record travel and reviews
+
+- Open **Travel footprint → Overview** and select **Add visited place**, or use the Passport tab. Choose a destination and visit date to record a historical or recent visit.
+- Mark a trip completed in its settings. Its destination is added to the passports of the creator and trip participants.
+- Review a companion from the completed trip workspace or from that traveler's profile when an eligible shared trip is available. Each traveler can submit one review per companion per trip.
+
+### Planner and admin operations
+
+- A tour planner creates a package, adds departures, and manages bookings from the planner workspace. Travelers discover packages under **Tours** and manage reservations under **My bookings**.
+- An administrator reviews planner verification requests and reports from the admin workspace. Warnings show under the affected user's profile as **Admin notices**.
+
+## Database schema and migrations
+
+`Backend/schema.sql` defines the base PostgreSQL schema. Startup applies every `Backend/migrations/*.sql` file in filename order after the base schema. Migrations are intended to be safe to apply on every startup. Add schema changes as a new numbered migration.
+
+For demo data, run:
 
 ```bash
 cd Backend
-python seed.py
+.venv/bin/python seed.py
 ```
-*Note: `seed.py` is idempotent and safe to run multiple times without duplicating entries.*
 
----
+Set `DATABASE_URL` before running the seed script if the database is not the local default.
 
-## 6. Running Automated Tests
+## Tests and production build
 
-The testing suite contains 119 comprehensive tests across unit, contract, and end-to-end multi-user workflow suites.
-
-### Run All Tests
+Run the backend suite:
 
 ```bash
-PYTHONPATH=Backend Backend/.venv/bin/pytest Backend/tests -v
+cd Backend
+.venv/bin/python -m pytest tests -q
 ```
 
-### Run Contract Tests (Response Shape Verification)
-
-Validates response key schemas across all 14 routers against legacy backend specifications:
+Run focused workflow and API response contract checks:
 
 ```bash
-PYTHONPATH=Backend Backend/.venv/bin/pytest Backend/tests/test_contracts.py -v
+cd Backend
+.venv/bin/python -m pytest tests/test_workflows.py tests/test_contracts.py -q
 ```
 
-### Run Multi-User Workflow Tests
-
-Executes the 12-stage sequential workflow (traveler trip creation, group publishing, application approval, workspace collaboration, commercial tour booking, and admin management):
+Build the frontend:
 
 ```bash
-PYTHONPATH=Backend Backend/.venv/bin/pytest Backend/tests/test_workflows.py -v
+cd Frontend
+npm ci
+npm run build
 ```
 
-*To run workflow tests against a dedicated PostgreSQL database, set `TEST_DATABASE_URL`:*
+## API documentation
 
-```bash
-TEST_DATABASE_URL=postgres://postgres@localhost:5432/porikroma_test pytest Backend/tests/test_workflows.py -v
+The running FastAPI service serves interactive docs at `/docs` and OpenAPI JSON at `/openapi.json`. The route inventory is maintained in [Backend/ROUTE_MAP.md](Backend/ROUTE_MAP.md).
+
+## Project layout
+
+```text
+Backend/
+  app/routers/       FastAPI route handlers
+  app/services/      AI, email, security, weather, and rate limiting
+  app/schemas/       Request and response validation models
+  migrations/        Ordered, idempotent SQL migrations
+  tests/             Unit, API contract, and multi-user workflow tests
+  schema.sql         Base PostgreSQL schema
+  seed.py            Repeatable demo data
+Frontend/
+  src/pages/         Public, traveler, planner, and admin screens
+  src/components/    Shared layout and trip workspace components
+  src/api/           Typed API client modules
 ```
-
----
-
-## 7. API Route Map
-
-All 111 endpoints (110 ported legacy endpoints + `/api/health`) are fully documented in [`Backend/ROUTE_MAP.md`](./Backend/ROUTE_MAP.md) detailing HTTP method, URL path, authorization requirements, and module domains.

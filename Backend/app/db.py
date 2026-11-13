@@ -67,6 +67,12 @@ class Database:
             sql = target_path.read_text(encoding="utf-8")
             async with self.pool.acquire() as conn:
                 await conn.execute(sql)
+                # Apply checked-in, idempotent migrations after the base schema so
+                # fresh Docker installs and existing databases converge equally.
+                migrations_dir = target_path.parent / "migrations"
+                if migrations_dir.is_dir():
+                    for migration_path in sorted(migrations_dir.glob("*.sql")):
+                        await conn.execute(migration_path.read_text(encoding="utf-8"))
             logger.info("Database schema applied successfully from %s.", target_path.name)
             return True
         except Exception as exc:

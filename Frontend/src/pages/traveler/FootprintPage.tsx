@@ -34,6 +34,7 @@ export function FootprintPage({ subpage = 'overview' }: FootprintPageProps) {
   const [destinations, setDestinations] = useState<Destination[]>([])
   const [showAddStamp, setShowAddStamp] = useState(false)
   const [stampDestId, setStampDestId] = useState('')
+  const [stampVisitedOn, setStampVisitedOn] = useState(new Date().toISOString().slice(0, 10))
   const [districtSearch, setDistrictSearch] = useState('')
   const [districtFilter, setDistrictFilter] = useState<'all' | 'visited' | 'unexplored'>('all')
 
@@ -81,9 +82,18 @@ export function FootprintPage({ subpage = 'overview' }: FootprintPageProps) {
     if (!stampDestId) return
     await api('/api/me/passport', {
       method: 'POST',
-      body: JSON.stringify({ destinationId: stampDestId }),
+      body: JSON.stringify({ destinationId: stampDestId, visitedOn: stampVisitedOn }),
     })
     setShowAddStamp(false)
+    setStampDestId('')
+    setStampVisitedOn(new Date().toISOString().slice(0, 10))
+    api<typeof passport>('/api/me/passport').then(setPassport)
+    api<typeof footprint>('/api/me/footprint').then(setFootprint)
+  }
+
+  const deleteStamp = async (stampId: string) => {
+    if (!window.confirm('Remove this stamp from your passport?')) return
+    await api(`/api/me/passport/${stampId}`, { method: 'DELETE' })
     api<typeof passport>('/api/me/passport').then(setPassport)
     api<typeof footprint>('/api/me/footprint').then(setFootprint)
   }
@@ -95,6 +105,9 @@ export function FootprintPage({ subpage = 'overview' }: FootprintPageProps) {
         title="Travel footprint"
         description="See the places, districts, and memories that have become part of your story."
       />
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '-12px', marginBottom: '16px' }}>
+        <button className="primary-btn" onClick={() => setShowAddStamp(true)}><Plus size={16} /> Add visited place</button>
+      </div>
 
       <div className="group-tabs">
         <Link to="/travel-footprint" className={`tab ${subpage === 'overview' ? 'active' : ''}`}>Overview</Link>
@@ -345,8 +358,10 @@ export function FootprintPage({ subpage = 'overview' }: FootprintPageProps) {
               </div>
             </div>
           </div>
+        </div>
+      )}
 
-          {showAddStamp && (
+      {showAddStamp && (
             <div className="modal-backdrop" onClick={() => setShowAddStamp(false)}>
               <div className="modal" onClick={(e) => e.stopPropagation()}>
                 <button className="modal-close" onClick={() => setShowAddStamp(false)}><X size={18} /></button>
@@ -359,14 +374,15 @@ export function FootprintPage({ subpage = 'overview' }: FootprintPageProps) {
                     ))}
                   </select>
                 </label>
+                <label style={{ marginTop: '12px' }}>Date visited
+                  <input type="date" value={stampVisitedOn} max={new Date().toISOString().slice(0, 10)} onChange={(e) => setStampVisitedOn(e.target.value)} />
+                </label>
                 <div className="modal-actions">
                   <button className="outline-btn" onClick={() => setShowAddStamp(false)}>Cancel</button>
                   <button className="primary-btn" onClick={addStamp}>Stamp passport</button>
                 </div>
               </div>
             </div>
-          )}
-        </div>
       )}
 
       {subpage === 'achievements' && (

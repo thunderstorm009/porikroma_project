@@ -316,6 +316,36 @@ async def seed(database_url: str = DATABASE_URL) -> None:
             user_ids["planner@porikroma.com"],
         )
 
+        # Completed demo trip shared by both traveler demo accounts. This powers
+        # the profile review form and provides a real example rating/review.
+        profile_demo_trip_id = await get_or_create_trip(
+            user_ids["traveler@porikroma.com"],
+            dest_ids["Cox's Bazar"],
+            "Demo: Cox’s Bazar travel companions",
+            "2024-12-10",
+            "2024-12-13",
+            "COMPLETED",
+            "PUBLIC",
+            24000,
+            "Completed sample trip shared by the traveler demo accounts for profile ratings and reviews.",
+        )
+        await conn.execute(
+            """INSERT INTO trip_members (trip_id, user_id, role)
+               VALUES ($1, $2, 'OWNER'), ($1, $3, 'MEMBER')
+               ON CONFLICT DO NOTHING""",
+            profile_demo_trip_id,
+            user_ids["traveler@porikroma.com"],
+            user_ids["traveler2@porikroma.com"],
+        )
+        await conn.execute(
+            """INSERT INTO peer_reviews (trip_id, reviewer_id, reviewee_id, rating, comment)
+               VALUES ($1, $2, $3, 5, 'A thoughtful and reliable travel companion. Shared plans clearly, stayed flexible, and helped make the trip enjoyable.')
+               ON CONFLICT (trip_id, reviewer_id, reviewee_id) DO NOTHING""",
+            profile_demo_trip_id,
+            user_ids["traveler2@porikroma.com"],
+            user_ids["traveler@porikroma.com"],
+        )
+
         trip3_id = await get_or_create_trip(
             user_ids["traveler@porikroma.com"],
             dest_ids["Bandarban"],

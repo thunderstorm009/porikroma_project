@@ -1,5 +1,5 @@
 import { api } from './client'
-import type { Tour, TourBooking } from '../types'
+import type { Tour, TourBooking, TourDeparture } from '../types'
 
 export const toursApi = {
   getTours: () =>

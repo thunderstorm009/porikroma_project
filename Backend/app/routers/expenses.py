@@ -2,6 +2,7 @@ from datetime import date, datetime
 from typing import List, Optional
 import uuid
 from fastapi import APIRouter, Depends, status
+from pydantic import BaseModel, Field
 from fastapi.responses import JSONResponse
 from app.db import Database, get_db
 from app.deps import get_current_user
@@ -13,6 +14,31 @@ from app.schemas.expenses import (
 from app.serializers import record_to_dict
 
 router = APIRouter(tags=["Expenses & Settlements"])
+
+
+class AnnualBudgetRequest(BaseModel):
+    year: int = Field(ge=2000, le=2200)
+    amount: int = Field(ge=0)
+
+
+@router.get("/api/expenses/annual-budget")
+async def get_annual_budget(current_user: dict = Depends(get_current_user), db: Database = Depends(get_db)):
+    user_uuid = uuid.UUID(str(current_user["id"]))
+    year = date.today().year
+    row = await db.fetchrow("SELECT amount FROM annual_travel_budgets WHERE user_id = $1 AND budget_year = $2", user_uuid, year)
+    return {"year": year, "amount": row["amount"] if row else 0}
+
+
+@router.put("/api/expenses/annual-budget")
+async def set_annual_budget(data: AnnualBudgetRequest, current_user: dict = Depends(get_current_user), db: Database = Depends(get_db)):
+    user_uuid = uuid.UUID(str(current_user["id"]))
+    row = await db.fetchrow(
+        """INSERT INTO annual_travel_budgets (user_id, budget_year, amount) VALUES ($1, $2, $3)
+           ON CONFLICT (user_id, budget_year) DO UPDATE SET amount = EXCLUDED.amount, updated_at = now()
+           RETURNING budget_year AS year, amount""",
+        user_uuid, data.year, data.amount,
+    )
+    return record_to_dict(row)
 
 
 def parse_date(val: Optional[str]) -> Optional[date]:
